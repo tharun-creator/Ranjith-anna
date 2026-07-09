@@ -1,5 +1,8 @@
 import os
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+if os.getenv("APP_ENV", "production") == "development" or os.getenv("OAUTHLIB_INSECURE_TRANSPORT") == "1":
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+else:
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession

@@ -46,7 +46,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
   })
 
   const handleSyncGmail = () => {
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+    const backendUrl = import.meta.env.VITE_API_URL || 'https://ranjith-anna.onrender.com/api/v1'
     window.location.href = `${backendUrl}/auth/google/login`
   }
 

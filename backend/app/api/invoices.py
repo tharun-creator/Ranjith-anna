@@ -726,10 +726,17 @@ class PubSubPayload(BaseModel):
 async def receive_gmail_webhook(
     payload: PubSubPayload,
     background_tasks: BackgroundTasks,
+    token: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
     import base64
     import json
+    import os
+
+    # Verify GCP Pub/Sub verification token if configured
+    expected_token = os.getenv("GCP_PUBSUB_VERIFICATION_TOKEN")
+    if expected_token and token != expected_token:
+        raise HTTPException(status_code=403, detail="Unauthorized webhook source")
 
     try:
         decoded_bytes = base64.b64decode(payload.message.data)
