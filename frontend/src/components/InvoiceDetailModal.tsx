@@ -184,7 +184,7 @@ export const InvoiceDetailModal = ({ invoice, onClose }: InvoiceDetailModalProps
   const [docType, setDocType] = useState(invoice.document_type || 'other')
 
   const getPdfFullUrl = (pdfUrl: string) => {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+    const baseUrl = import.meta.env.VITE_API_URL || 'https://ranjith-anna.onrender.com/api/v1'
     const fullUrl = pdfUrl.startsWith('/api/v1') && baseUrl.endsWith('/api/v1')
       ? `${baseUrl.substring(0, baseUrl.length - 7)}${pdfUrl}`
       : `${baseUrl}${pdfUrl}`

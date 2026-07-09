@@ -7,6 +7,6 @@ export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token
 export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
 
 export const getGoogleLoginUrl = () => {
-  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+  const backendUrl = import.meta.env.VITE_API_URL || 'https://ranjith-anna.onrender.com/api/v1';
   return `${backendUrl}/auth/google/login`;
 };
