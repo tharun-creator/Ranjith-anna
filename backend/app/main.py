@@ -1,4 +1,12 @@
 import os
+import socket
+import urllib3.util.connection as urllib3_cn
+
+def allowed_gai_family():
+    return socket.AF_INET
+
+urllib3_cn.allowed_gai_family = allowed_gai_family
+
 import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
