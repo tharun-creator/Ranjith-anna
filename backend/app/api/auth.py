@@ -98,7 +98,14 @@ async def google_callback(
             autogenerate_code_verifier=False
         )
         flow.redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
-        flow.fetch_token(authorization_response=str(request.url))
+        
+        # Force HTTPS in the callback URL to prevent SSL proxy termination mismatches on Render
+        auth_response_url = str(request.url)
+        if auth_response_url.startswith("http://") and os.getenv("APP_ENV", "production") != "development":
+            auth_response_url = auth_response_url.replace("http://", "https://", 1)
+            
+        flow.fetch_token(authorization_response=auth_response_url)
+
         
         credentials = flow.credentials
         
