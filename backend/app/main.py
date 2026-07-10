@@ -1,11 +1,15 @@
 import os
 import socket
-import urllib3.util.connection as urllib3_cn
 
-def allowed_gai_family():
-    return socket.AF_INET
-
-urllib3_cn.allowed_gai_family = allowed_gai_family
+# Globally patch socket.getaddrinfo to force IPv4.
+# This prevents OSError: [Errno 101] Network is unreachable on Render,
+# which lacks outbound IPv6 support but resolves hosts (Google & PostgreSQL) to IPv6 addresses.
+orig_getaddrinfo = socket.getaddrinfo
+def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    if family == 0:
+        family = socket.AF_INET
+    return orig_getaddrinfo(host, port, family, type, proto, flags)
+socket.getaddrinfo = patched_getaddrinfo
 
 import json
 from fastapi import FastAPI
