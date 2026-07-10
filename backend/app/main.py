@@ -6,10 +6,15 @@ import socket
 # which lacks outbound IPv6 support but resolves hosts (Google & PostgreSQL) to IPv6 addresses.
 orig_getaddrinfo = socket.getaddrinfo
 def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-    if family == 0:
-        family = socket.AF_INET
-    return orig_getaddrinfo(host, port, family, type, proto, flags)
+    res = orig_getaddrinfo(host, port, family, type, proto, flags)
+    # Prefer IPv4 (AF_INET) if the requested family is unspecified (AF_UNSPEC / 0)
+    if family == socket.AF_UNSPEC or family == 0:
+        ipv4_res = [r for r in res if r[0] == socket.AF_INET]
+        if ipv4_res:
+            return ipv4_res
+    return res
 socket.getaddrinfo = patched_getaddrinfo
+
 
 import json
 from fastapi import FastAPI
