@@ -21,6 +21,14 @@ socket.getaddrinfo = patched_getaddrinfo
 
 
 import json
+import urllib3.util.connection as urllib3_cn
+
+# Patch urllib3 to prevent IPv6 resolution which fails outbound connections on Render
+def allowed_gai_families():
+    import socket
+    return (socket.AF_INET,)
+
+urllib3_cn.allowed_gai_families = allowed_gai_families
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
