@@ -6,19 +6,18 @@ load_dotenv()
 
 import socket
 
-# Globally patch socket.getaddrinfo to force IPv4 only when running on Render or when forced.
-# This prevents OSError: [Errno 101] Network is unreachable on Render,
+# Globally patch socket.getaddrinfo to force IPv4.
+# This prevents OSError: [Errno 101] Network is unreachable on Render/hosting environments,
 # which lacks outbound IPv6 support but resolves hosts (Google & PostgreSQL) to IPv6 addresses.
-if os.getenv("RENDER") == "true" or os.getenv("FORCE_IPV4") == "true":
-    orig_getaddrinfo = socket.getaddrinfo
-    def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-        # Force family to IPv4 (AF_INET) to prevent any attempt at resolving/routing via IPv6
-        forced_family = socket.AF_INET
-        try:
-            return orig_getaddrinfo(host, port, forced_family, type, proto, flags)
-        except Exception:
-            return orig_getaddrinfo(host, port, family, type, proto, flags)
-    socket.getaddrinfo = patched_getaddrinfo
+orig_getaddrinfo = socket.getaddrinfo
+def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    # Force family to IPv4 (AF_INET) to prevent any attempt at resolving/routing via IPv6
+    forced_family = socket.AF_INET
+    try:
+        return orig_getaddrinfo(host, port, forced_family, type, proto, flags)
+    except Exception:
+        return orig_getaddrinfo(host, port, family, type, proto, flags)
+socket.getaddrinfo = patched_getaddrinfo
 
 
 import json
