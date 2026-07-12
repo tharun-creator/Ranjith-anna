@@ -1,9 +1,7 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { 
   Sun, Moon, AlertTriangle, ChevronLeft, ChevronRight, 
-  ArrowUpRight, ArrowDownLeft, FileText, CheckCircle2, 
-  AlertCircle, ShieldAlert, BarChart3, Calendar as CalendarIcon,
-  TrendingUp, TrendingDown, RefreshCw, Layers
+  TrendingUp, TrendingDown
 } from 'lucide-react'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
@@ -48,8 +46,11 @@ const MOCK_INVOICES: MockInvoice[] = [
 ]
 
 const USD_TO_INR = 83.5
+interface DashboardProps {
+  onViewAllInvoices?: () => void
+}
 
-export const Dashboard = () => {
+export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [activeTab, setActiveTab] = useState<'overview' | 'invoices' | 'calendar' | 'ledger'>('overview')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
