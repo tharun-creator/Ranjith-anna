@@ -8,7 +8,7 @@ import {
   getPaginationRowModel,
 } from '@tanstack/react-table'
 import { ArrowUpDown, ChevronLeft, ChevronRight, Search, Download, FileText, X, RefreshCw } from 'lucide-react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { fetchInvoices, triggerSync, fetchLedgers } from '@/api/invoices'
 import { InvoiceDetailModal, type Invoice, formatDateOnly, DOCUMENT_TYPES } from '@/components/InvoiceDetailModal'
 
@@ -265,10 +265,20 @@ export const Invoices = () => {
     }
   })
 
-  const { data: invoices = [], isLoading } = useQuery({
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
+  } = useInfiniteQuery({
     queryKey: ['invoices'],
-    queryFn: fetchInvoices
+    queryFn: ({ pageParam }) => fetchInvoices({ pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage: any) => lastPage.next_offset,
   })
+
+  const invoices = data ? data.pages.flatMap((page: any) => page.items) : []
 
   // Filter out invoices based on filter selections
   const filteredInvoices = useMemo(() => invoices.filter((inv: Invoice) => {
@@ -746,6 +756,19 @@ export const Invoices = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Load More */}
+        {hasNextPage && (
+          <div className="flex justify-center p-4 border-t border-border">
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-medium text-sm transition-colors cursor-pointer"
+            >
+              {isFetchingNextPage ? 'Loading more...' : 'Load More Invoices'}
+            </button>
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="p-4 border-t border-border flex items-center justify-between text-sm text-muted-foreground">

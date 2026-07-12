@@ -24,8 +24,13 @@ api.interceptors.response.use(
   }
 );
 
-export const fetchInvoices = async () => {
-  const { data } = await api.get('/invoices/');
+export const fetchInvoices = async ({ pageParam = 0 }: { pageParam?: number } = {}) => {
+  const { data } = await api.get('/invoices/', {
+    params: {
+      limit: 50,
+      offset: pageParam
+    }
+  });
   return data;
 };
 

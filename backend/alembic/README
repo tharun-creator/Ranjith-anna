@@ -1,1 +1,34 @@
-Generic single-database configuration.
+# Alembic Database Migrations
+
+Cutover Date: 2026-07-12
+
+From this date forward, all database schema changes must be managed via Alembic. Manual SQL migration scripts (e.g. `migrate_v*.py`) are deprecated and must not be added.
+
+## Working with Migrations
+
+### For Existing Databases (Stamping)
+If you are deploying this code to an environment with an existing database that has already run the legacy migrations up to v6:
+```bash
+python -m alembic stamp head
+```
+This marks the database as up-to-date with the baseline migration revision (`93ffbe56c9bc`) without re-running any schema changes.
+
+### For New Databases / Fresh Installation
+1. Initialize the tables using the metadata script:
+   ```bash
+   python init_db_tables.py
+   ```
+2. Stamp the database to register the initial baseline revision:
+   ```bash
+   python -m alembic stamp head
+   ```
+
+### Creating New Migrations
+When you modify models in `app/models.py`, generate a new migration script using:
+```bash
+python -m alembic revision --autogenerate -m "describe your changes"
+```
+Review the generated file in `alembic/versions/` and then run:
+```bash
+python -m alembic upgrade head
+```

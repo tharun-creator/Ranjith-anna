@@ -1,37 +1,51 @@
 import os
+from dotenv import load_dotenv
+
+# Load env variables first
+load_dotenv()
+
 import socket
 
-# Globally patch socket.getaddrinfo to force IPv4.
+# Globally patch socket.getaddrinfo to force IPv4 only when running on Render or when forced.
 # This prevents OSError: [Errno 101] Network is unreachable on Render,
 # which lacks outbound IPv6 support but resolves hosts (Google & PostgreSQL) to IPv6 addresses.
-orig_getaddrinfo = socket.getaddrinfo
-def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-    res = orig_getaddrinfo(host, port, family, type, proto, flags)
-    # Prefer IPv4 (AF_INET) if the requested family is unspecified (AF_UNSPEC / 0)
-    if family == socket.AF_UNSPEC or family == 0:
-        ipv4_res = [r for r in res if r[0] == socket.AF_INET]
-        if ipv4_res:
-            return ipv4_res
-    return res
-socket.getaddrinfo = patched_getaddrinfo
+if os.getenv("RENDER") == "true" or os.getenv("FORCE_IPV4") == "true":
+    orig_getaddrinfo = socket.getaddrinfo
+    def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        res = orig_getaddrinfo(host, port, family, type, proto, flags)
+        # Prefer IPv4 (AF_INET) if the requested family is unspecified (AF_UNSPEC / 0)
+        if family == socket.AF_UNSPEC or family == 0:
+            ipv4_res = [r for r in res if r[0] == socket.AF_INET]
+            if ipv4_res:
+                return ipv4_res
+        return res
+    socket.getaddrinfo = patched_getaddrinfo
 
 
 import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-
-load_dotenv()
 
 from app.api import invoices, auth
 
-allowed_origins_raw = os.getenv("ALLOWED_ORIGINS", '["*"]')
-try:
-    allowed_origins = json.loads(allowed_origins_raw)
-    if not isinstance(allowed_origins, list):
-        allowed_origins = [allowed_origins_raw]
-except Exception:
-    allowed_origins = [allowed_origins_raw]
+allowed_origins_raw = os.getenv("ALLOWED_ORIGINS")
+app_env = os.getenv("APP_ENV", "production").lower()
+
+if not allowed_origins_raw:
+    if app_env == "development":
+        allowed_origins = ["*"]
+    else:
+        raise ValueError("ALLOWED_ORIGINS environment variable is not configured in production.")
+else:
+    try:
+        allowed_origins = json.loads(allowed_origins_raw)
+        if not isinstance(allowed_origins, list):
+            allowed_origins = [allowed_origins_raw]
+    except Exception as e:
+        if app_env == "development":
+            allowed_origins = ["*"]
+        else:
+            raise ValueError(f"Failed to parse ALLOWED_ORIGINS: {e}")
 
 app = FastAPI(title="Invoice Intelligence API")
 

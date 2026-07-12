@@ -26,12 +26,20 @@ def create_access_token(user_id: str) -> str:
         "sub": str(user_id),
         "iat": now,
         "exp": now + timedelta(days=JWT_SESSION_EXPIRE_DAYS),
+        "iss": "finnex-app",
+        "aud": "finnex-users"
     }
     return jwt.encode(payload, JWT_PRIVATE_KEY, algorithm=JWT_ALGORITHM)
 
 
 def decode_access_token(token: str) -> dict:
-    return jwt.decode(token, JWT_PUBLIC_KEY, algorithms=[JWT_ALGORITHM])
+    return jwt.decode(
+        token, 
+        JWT_PUBLIC_KEY, 
+        algorithms=[JWT_ALGORITHM], 
+        issuer="finnex-app",
+        audience="finnex-users"
+    )
 
 
 async def get_current_user(

@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.models import Invoice, Attachment, User
 from app.auth_utils import get_current_user
+from app.services.storage import FileStorage, get_storage
 
 router = APIRouter()
 
@@ -90,17 +91,44 @@ def get_duplicates_map(invoices: List[Invoice]):
         
     return dup_map
 
-@router.get("/", response_model=List[dict])
-async def get_invoices(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+@router.get("/")
+async def get_invoices(
+    limit: Optional[int] = None,
+    offset: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     from app.models import EmailRecord
     from sqlalchemy.sql import func
-    result = await db.execute(
+    
+    base_query = (
         select(Invoice, EmailRecord.received_at, EmailRecord.sender)
         .outerjoin(EmailRecord, Invoice.email_record_id == EmailRecord.id)
         .filter(Invoice.user_id == current_user.id)
         .order_by(func.coalesce(EmailRecord.received_at, Invoice.created_at).desc())
     )
-    rows = result.all()
+    
+    is_paginated = limit is not None or offset is not None
+    total_count = 0
+    page_limit = 50
+    page_offset = 0
+    
+    if is_paginated:
+        page_limit = min(limit or 50, 200)
+        page_offset = offset or 0
+        paginated_query = base_query.limit(page_limit).offset(page_offset)
+        result = await db.execute(paginated_query)
+        rows = result.all()
+        
+        # Get total count
+        from sqlalchemy import select as sql_select
+        count_query = sql_select(func.count(Invoice.id)).filter(Invoice.user_id == current_user.id)
+        count_res = await db.execute(count_query)
+        total_count = count_res.scalar() or 0
+    else:
+        result = await db.execute(base_query)
+        rows = result.all()
+        
     invoices = [row[0] for row in rows]
     
     # Calculate duplicates
@@ -115,7 +143,7 @@ async def get_invoices(db: AsyncSession = Depends(get_db), current_user: User = 
             return val.date().isoformat()
         return None
 
-    return [
+    serialized_items = [
         {
             "id": inv.id,
             "invoice_number": inv.invoice_number,
@@ -152,6 +180,15 @@ async def get_invoices(db: AsyncSession = Depends(get_db), current_user: User = 
         }
         for inv, received_at, sender in rows
     ]
+
+    if not is_paginated:
+        return serialized_items
+
+    return {
+        "items": serialized_items,
+        "total_count": total_count,
+        "next_offset": page_offset + len(serialized_items) if page_offset + len(serialized_items) < total_count else None
+    }
 
 @router.get("/summary")
 async def get_dashboard_summary(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -722,18 +759,43 @@ class PubSubPayload(BaseModel):
     message: PubSubMessage
     subscription: str
 
+from fastapi import Request
+
 @router.post("/webhook")
 async def receive_gmail_webhook(
     payload: PubSubPayload,
     background_tasks: BackgroundTasks,
+    request: Request,
     token: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
     import base64
     import json
     import os
+    import logging
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
 
-    # Verify GCP Pub/Sub verification token if configured
+    logger = logging.getLogger(__name__)
+
+    # 1. Google Pub/Sub signature verification (JWT signed by Google)
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        bearer_token = auth_header.split(" ")[1]
+        try:
+            # Verify signature & certificates caching dynamically
+            id_info = id_token.verify_oauth2_token(
+                bearer_token,
+                google_requests.Request()
+            )
+            # Verify issuer
+            if id_info.get("iss") not in ["accounts.google.com", "https://accounts.google.com"]:
+                raise ValueError("Wrong issuer")
+        except Exception as e:
+            logger.error(f"Webhook Pub/Sub signature verification failed: {e}")
+            raise HTTPException(status_code=403, detail=f"Invalid webhook signature: {e}")
+
+    # 2. Verify static GCP Pub/Sub verification token (secondary fallback)
     expected_token = os.getenv("GCP_PUBSUB_VERIFICATION_TOKEN")
     if expected_token and token != expected_token:
         raise HTTPException(status_code=403, detail="Unauthorized webhook source")
@@ -769,10 +831,11 @@ async def receive_gmail_webhook(
 async def get_invoice_pdf(
     invoice_id: str,
     token: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    storage: FileStorage = Depends(get_storage)
 ):
     import os
-    from fastapi.responses import FileResponse
+    from fastapi.responses import FileResponse, RedirectResponse
     from app.auth_utils import decode_access_token
 
     # Browsers can't attach an Authorization header to <iframe src>/<a href>
@@ -809,13 +872,20 @@ async def get_invoice_pdf(
     if not attachment or not attachment.storage_path:
         raise HTTPException(status_code=404, detail="PDF attachment not found for this invoice")
 
-    if not os.path.exists(attachment.storage_path):
-        raise HTTPException(status_code=404, detail="PDF file not found on disk")
+    if hasattr(storage, "base_dir"):
+        local_path = os.path.join(storage.base_dir, attachment.storage_path)
+        if not os.path.exists(local_path):
+            raise HTTPException(status_code=404, detail="PDF file not found on disk")
+        return FileResponse(
+            path=local_path,
+            media_type="application/pdf",
+            filename=attachment.filename or "invoice.pdf",
+            content_disposition_type="inline"
+        )
 
-    return FileResponse(
-        path=attachment.storage_path,
-        media_type="application/pdf",
-        filename=attachment.filename or "invoice.pdf",
-        content_disposition_type="inline"
-    )
+    # Cloud storage (e.g. S3) -> Redirect to presigned URL
+    presigned_url = storage.get_url(attachment.storage_path)
+    if not presigned_url:
+        raise HTTPException(status_code=404, detail="PDF URL generation failed")
+    return RedirectResponse(url=presigned_url)
 

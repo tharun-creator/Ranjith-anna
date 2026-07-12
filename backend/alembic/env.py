@@ -14,11 +14,25 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+from app.database import Base
+from app.models import Organization, User, GmailConnection, EmailRecord, Invoice, Attachment, FinancialEvent, LedgerMaster
+
+target_metadata = Base.metadata
+
+# set database url dynamically from environment variable
+db_url = os.getenv("DATABASE_URL")
+if db_url:
+    # alembic expects postgresql+asyncpg for asyncpg engine, but if we run synchronous migrations we might need psycopg2. 
+    # Let's clean the driver prefix if present, e.g. postgresql+asyncpg -> postgresql
+    if "postgresql+asyncpg" in db_url:
+        db_url = db_url.replace("postgresql+asyncpg", "postgresql")
+    config.set_main_option("sqlalchemy.url", db_url)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

@@ -3,13 +3,17 @@ import os
 import uuid
 import pypdf
 import logging
-from datetime import datetime
+import asyncio
+from typing import Any
+from datetime import datetime, timezone
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Invoice, EmailRecord, GmailConnection, Attachment
 from app.services.gmail_service import GmailService
 from app.services.ai_extraction_service import AIExtractionService
+from app.services.storage import FileStorage, get_storage
+from app.database import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
 
@@ -25,36 +29,23 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
         logger.error(f"Failed to extract text from PDF: {e}")
         return ""
 
-async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, days_back: int = 30) -> dict:
-    """
-    Syncs invoices from Gmail for the given connection.
-    Returns a summary of processed emails and invoices created.
-    """
-    stats = {
-        "emails_fetched": 0,
-        "emails_processed": 0,
-        "invoices_created": 0,
-        "failed": 0
-    }
-    
-    if not connection.encrypted_refresh_token:
-        logger.error(f"No refresh token available for GmailConnection {connection.gmail_address}")
-        return stats
-        
+async def process_single_email(
+    email: dict,
+    days_back: int,
+    default_org_id: Any,
+    default_user_id: Any,
+    connection_email: str,
+    storage: FileStorage,
+    gmail_service: GmailService,
+    ai_service: AIExtractionService,
+    semaphore: asyncio.Semaphore,
+    stats: dict
+) -> None:
+    """Processes a single email, downloads PDF attachments, calls LLM under a semaphore, and commits records."""
+    msg_id = email["message_id"]
     try:
-        gmail_service = GmailService(connection.encrypted_refresh_token)
-        emails = gmail_service.fetch_invoice_emails(days_back=days_back)
-        stats["emails_fetched"] = len(emails)
-        
-        ai_service = AIExtractionService()
-        
-        # Attribute synced invoices to whichever user owns this Gmail connection
-        default_org_id = connection.org_id
-        default_user_id = connection.user_id
-
-        for email in emails:
-            msg_id = email["message_id"]
-            
+        # Create a dedicated session for this concurrent task to avoid shared session conflicts
+        async with AsyncSessionLocal() as db:
             # Check if this email record is already in DB
             stmt = select(EmailRecord).filter(EmailRecord.gmail_message_id == msg_id)
             res = await db.execute(stmt)
@@ -62,8 +53,7 @@ async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, day
             
             if existing_record:
                 if existing_record.processing_status == "completed":
-                    # Already processed successfully
-                    continue
+                    return
                 email_record = existing_record
                 email_record.processing_status = "processing"
             else:
@@ -78,7 +68,7 @@ async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, day
                     cutoff = dt_module.datetime.now(dt_module.timezone.utc) - dt_module.timedelta(days=30)
                     if received_at_dt < cutoff:
                         logger.info(f"Skipping email {msg_id} older than 30 days: received_at={received_at_dt}")
-                        continue
+                        return
 
                 email_record = EmailRecord(
                     org_id=default_org_id,
@@ -107,16 +97,11 @@ async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, day
                         if extracted_text:
                             pdf_text += f"\n--- Attachment: {att['filename']} ---\n" + extracted_text
                         
-                        # Save attachment file locally and add Attachment record to DB
+                        # Save attachment file to storage backend and add Attachment record to DB
                         try:
-                            # Construct local directory: backend/data/invoices
-                            data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "invoices"))
-                            os.makedirs(data_dir, exist_ok=True)
-                            
                             att_id = uuid.uuid4()
-                            file_path = os.path.join(data_dir, f"{att_id}.pdf")
-                            with open(file_path, "wb") as f:
-                                f.write(pdf_bytes)
+                            storage_key = f"{att_id}.pdf"
+                            storage.save(pdf_bytes, storage_key, "application/pdf")
                                 
                             attachment_record = Attachment(
                                 id=att_id,
@@ -126,13 +111,13 @@ async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, day
                                 filename=att["filename"],
                                 mime_type="application/pdf",
                                 file_size_bytes=len(pdf_bytes),
-                                storage_path=file_path,
+                                storage_path=storage_key,
                                 processing_status="completed",
                                 extracted_text=extracted_text
                             )
                             db.add(attachment_record)
                         except Exception as store_err:
-                            logger.error(f"Failed to save PDF attachment locally or to DB: {store_err}", exc_info=True)
+                            logger.error(f"Failed to save PDF attachment to storage backend or to DB: {store_err}", exc_info=True)
             
             # Fallback to email body text if no PDF text is available
             extraction_source_text = pdf_text.strip()
@@ -144,23 +129,24 @@ async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, day
                 email_record.raw_body_preview = "No text extracted from PDF or email body."
                 await db.commit()
                 stats["failed"] += 1
-                continue
+                return
                 
-            # Run AI extraction
-            extracted_data = await ai_service.extract_invoice_data(
-                text_content=extraction_source_text,
-                pdf_bytes=first_pdf_bytes,
-                email_sender=email_record.sender or "",
-                email_subject=email_record.subject or "",
-                connection_email=connection.gmail_address or ""
-            )
+            # Run AI extraction under the bounded semaphore to prevent API rate-limit bursts
+            async with semaphore:
+                extracted_data = await ai_service.extract_invoice_data(
+                    text_content=extraction_source_text,
+                    pdf_bytes=first_pdf_bytes,
+                    email_sender=email_record.sender or "",
+                    email_subject=email_record.subject or "",
+                    connection_email=connection_email or ""
+                )
             
             if not extracted_data or (not extracted_data.get("vendor_name") and not extracted_data.get("vendor_or_customer_name") and not extracted_data.get("total_amount")):
                 email_record.processing_status = "failed"
                 email_record.raw_body_preview = f"AI extraction did not identify this PDF or email as a financial event. Result: {extracted_data}"
                 await db.commit()
                 stats["failed"] += 1
-                continue
+                return
                 
             # Parse dates
             invoice_date = None
@@ -269,7 +255,7 @@ async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, day
                 cashflow=cashflow,
                 amount=total_amount,
                 status=event_status,
-                created_at=email_record.received_at or datetime.utcnow()
+                created_at=email_record.received_at or datetime.now(timezone.utc)
             )
             db.add(fe)
 
@@ -281,9 +267,66 @@ async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, day
             stats["emails_processed"] += 1
             stats["invoices_created"] += 1
 
+    except Exception as single_err:
+        logger.error(f"Failed to sync individual email {msg_id}: {single_err}", exc_info=True)
+        stats["failed"] += 1
+
+async def sync_gmail_invoices(db: AsyncSession, connection: GmailConnection, days_back: int = 30, storage: FileStorage = None) -> dict:
+    """
+    Syncs invoices from Gmail for the given connection.
+    Parallelizes email processing with asyncio.gather and bounds LLM requests with Semaphore.
+    """
+    stats = {
+        "emails_fetched": 0,
+        "emails_processed": 0,
+        "invoices_created": 0,
+        "failed": 0
+    }
+    
+    if not connection.encrypted_refresh_token:
+        logger.error(f"No refresh token available for GmailConnection {connection.gmail_address}")
+        return stats
+        
+    try:
+        if not storage:
+            storage = get_storage()
+            
+        gmail_service = GmailService(connection.encrypted_refresh_token)
+        emails = gmail_service.fetch_invoice_emails(days_back=days_back)
+        stats["emails_fetched"] = len(emails)
+        
+        ai_service = AIExtractionService()
+        
+        # Attribute synced invoices to whichever user owns this Gmail connection
+        default_org_id = connection.org_id
+        default_user_id = connection.user_id
+
+        # Limit concurrent calls to external AI providers (max 3 concurrent)
+        semaphore = asyncio.Semaphore(3)
+
+        # Build list of async tasks for parallel execution
+        tasks = [
+            process_single_email(
+                email=email,
+                days_back=days_back,
+                default_org_id=default_org_id,
+                default_user_id=default_user_id,
+                connection_email=connection.gmail_address,
+                storage=storage,
+                gmail_service=gmail_service,
+                ai_service=ai_service,
+                semaphore=semaphore,
+                stats=stats
+            )
+            for email in emails
+        ]
+
+        # Process all emails in parallel
+        if tasks:
+            await asyncio.gather(*tasks)
             
     except Exception as e:
-        logger.error(f"Gmail sync failed: {e}", exc_info=True)
+        logger.error(f"Gmail sync process failed: {e}", exc_info=True)
         stats["failed"] += 1
         
     return stats
