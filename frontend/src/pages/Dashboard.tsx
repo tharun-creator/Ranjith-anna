@@ -56,6 +56,14 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2026, 6, 12)) // July 2026 for mock data
 
+  const handleTabChange = (tab: 'overview' | 'invoices' | 'calendar' | 'ledger') => {
+    setActiveTab(tab)
+    if (tab === 'invoices' && onViewAllInvoices) {
+      onViewAllInvoices()
+    }
+    if (tab !== 'calendar') setSelectedDate(null)
+  }
+
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
   }
@@ -229,10 +237,7 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
             {(['overview', 'invoices', 'calendar', 'ledger'] as const).map(tab => (
               <button
                 key={tab}
-                onClick={() => {
-                  setActiveTab(tab)
-                  if (tab !== 'calendar') setSelectedDate(null)
-                }}
+                onClick={() => handleTabChange(tab)}
                 className={`interactive-el px-3 py-1.5 rounded-md font-medium text-xs capitalize transition-all duration-150 ${
                   activeTab === tab 
                     ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] shadow-sm' 
