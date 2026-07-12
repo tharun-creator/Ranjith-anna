@@ -12,13 +12,12 @@ import socket
 if os.getenv("RENDER") == "true" or os.getenv("FORCE_IPV4") == "true":
     orig_getaddrinfo = socket.getaddrinfo
     def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-        res = orig_getaddrinfo(host, port, family, type, proto, flags)
-        # Prefer IPv4 (AF_INET) if the requested family is unspecified (AF_UNSPEC / 0)
-        if family == socket.AF_UNSPEC or family == 0:
-            ipv4_res = [r for r in res if r[0] == socket.AF_INET]
-            if ipv4_res:
-                return ipv4_res
-        return res
+        # Force family to IPv4 (AF_INET) to prevent any attempt at resolving/routing via IPv6
+        forced_family = socket.AF_INET
+        try:
+            return orig_getaddrinfo(host, port, forced_family, type, proto, flags)
+        except Exception:
+            return orig_getaddrinfo(host, port, family, type, proto, flags)
     socket.getaddrinfo = patched_getaddrinfo
 
 
