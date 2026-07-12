@@ -11,12 +11,14 @@ import socket
 # which lacks outbound IPv6 support but resolves hosts (Google & PostgreSQL) to IPv6 addresses.
 orig_getaddrinfo = socket.getaddrinfo
 def patched_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-    # Force family to IPv4 (AF_INET) to prevent any attempt at resolving/routing via IPv6
-    forced_family = socket.AF_INET
     try:
-        return orig_getaddrinfo(host, port, forced_family, type, proto, flags)
+        # Request both or IPv4 explicitly
+        res = orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+        if res:
+            return res
     except Exception:
-        return orig_getaddrinfo(host, port, family, type, proto, flags)
+        pass
+    return orig_getaddrinfo(host, port, family, type, proto, flags)
 socket.getaddrinfo = patched_getaddrinfo
 
 
