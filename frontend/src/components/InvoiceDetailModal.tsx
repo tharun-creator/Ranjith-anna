@@ -364,28 +364,30 @@ export const InvoiceDetailModal = ({ invoice, onClose }: InvoiceDetailModalProps
             {/* Financial details */}
             <div className="space-y-4">
               <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Financial Overview</h4>
-              <div className="bg-secondary/10 rounded-lg p-4 space-y-3 border border-border/50">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Total Amount</span>
-                  <span className="font-semibold text-base text-foreground">
+              <div className="bg-secondary/10 rounded-lg p-4 border border-border/50">
+                <div className="grid grid-cols-12 gap-y-3 text-sm items-center">
+                  <span className="col-span-5 text-muted-foreground">Total Amount</span>
+                  <span className="col-span-7 font-bold text-foreground text-right">
                     {formatCurrency(invoice.total_amount || 0)}
                   </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Currency</span>
-                  <span className="font-medium text-foreground uppercase">{invoice.currency || 'INR'}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Confidence Score</span>
-                  <span className="font-medium text-foreground">{invoice.confidence_score || 0}%</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Payment Terms</span>
-                  <span className="font-medium text-foreground">{invoice.payment_terms || '—'}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm border-t border-border/20 pt-1.5">
-                  <span className="text-muted-foreground">Document Type</span>
-                  <span className="font-semibold text-foreground capitalize">
+                  
+                  <span className="col-span-5 text-muted-foreground">Currency</span>
+                  <span className="col-span-7 font-bold text-foreground text-right uppercase">
+                    {invoice.currency || 'INR'}
+                  </span>
+                  
+                  <span className="col-span-5 text-muted-foreground">Confidence Score</span>
+                  <span className="col-span-7 font-bold text-foreground text-right">
+                    {invoice.confidence_score || 0}%
+                  </span>
+                  
+                  <span className="col-span-5 text-muted-foreground">Payment Terms</span>
+                  <span className="col-span-7 font-bold text-foreground text-right">
+                    {invoice.payment_terms || '—'}
+                  </span>
+                  
+                  <span className="col-span-5 text-muted-foreground border-t border-border/20 pt-2">Document Type</span>
+                  <span className="col-span-7 font-bold text-foreground text-right border-t border-border/20 pt-2 capitalize">
                     {(invoice.document_type || '—').replace(/_/g, ' ')}
                   </span>
                 </div>
@@ -483,17 +485,19 @@ export const InvoiceDetailModal = ({ invoice, onClose }: InvoiceDetailModalProps
                   </>
                 ) : (
                   <>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Invoice Date</span>
-                      <span className="font-medium text-foreground">{formatDateOnly(invoice.invoice_date) || '—'}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Due Date</span>
-                      <span className="font-medium text-foreground">{formatDateOnly(invoice.due_date) || '—'}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Received Date</span>
-                      <span className="font-medium text-foreground">
+                    <div className="grid grid-cols-12 gap-y-3 text-sm items-center">
+                      <span className="col-span-5 text-muted-foreground">Invoice Date</span>
+                      <span className="col-span-7 font-bold text-foreground text-right">
+                        {formatDateOnly(invoice.invoice_date) || '—'}
+                      </span>
+                      
+                      <span className="col-span-5 text-muted-foreground">Due Date</span>
+                      <span className="col-span-7 font-bold text-foreground text-right">
+                        {formatDateOnly(invoice.due_date) || '—'}
+                      </span>
+                      
+                      <span className="col-span-5 text-muted-foreground">Received Date</span>
+                      <span className="col-span-7 font-bold text-foreground text-right">
                         {invoice.received_at ? new Date(invoice.received_at).toLocaleDateString('en-US', {
                           year: 'numeric', month: 'short', day: 'numeric'
                         }) : '—'}
