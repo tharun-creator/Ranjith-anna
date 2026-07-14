@@ -26,7 +26,7 @@ from app.models import Organization, User, GmailConnection, EmailRecord, Invoice
 target_metadata = Base.metadata
 
 # set database url dynamically from environment variable
-db_url = os.getenv("DATABASE_URL")
+db_url = os.getenv("DATABASE_URL", "").strip()
 if db_url:
     # alembic expects postgresql+asyncpg for asyncpg engine, but if we run synchronous migrations we might need psycopg2. 
     # Let's clean the driver prefix if present, e.g. postgresql+asyncpg -> postgresql

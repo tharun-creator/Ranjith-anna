@@ -9,7 +9,7 @@ from app.database import Base
 from app.models import Organization, User, GmailConnection, EmailRecord, Invoice, Attachment, FinancialEvent, LedgerMaster
 
 async def main():
-    db_url = os.getenv("DATABASE_URL")
+    db_url = os.getenv("DATABASE_URL", "").strip()
     if not db_url:
         print("DATABASE_URL is not set in the environment variables.")
         return
