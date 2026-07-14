@@ -1,86 +1,92 @@
-# Finnex Invoice Frontend Architecture & Design Analysis
+# Finnex: Invoice & Expense Intelligence Dashboard
 
-This document provides a comprehensive breakdown of the frontend application structure, architectural components, styling conventions, and an engineering design opinion.
+This document provides a comprehensive breakdown of the Finnex application architecture, database schemas, backend services, and frontend design patterns.
 
 ---
 
-## 1. Directory Structure & Layout
+## 1. System Architecture
 
-The frontend is built using **React (with TypeScript)**, powered by **Vite** for rapid bundling, and utilizes **Tailwind CSS** for layout and design tokens.
+```mermaid
+graph TD
+    subgraph Frontend (React + Vite)
+        UI[Dashboard UI] --> Context[InvoiceContext]
+        Context --> API[API Client Layer]
+    end
 
-```
-frontend/
-├── .env                  # Environment configurations (API endpoints, etc.)
-├── index.html            # Main HTML document template
-├── package.json          # Dependency manifest
-├── tsconfig.json         # TypeScript configuration files
-├── vite.config.ts        # Vite build tool configuration
-├── public/               # Static public assets (icons, images)
-└── src/
-    ├── main.tsx          # React application bootstrapping
-    ├── App.tsx           # App root: manages auth state & lightweight page-routing
-    ├── index.css         # Styling system entry: sets up Tailwind v4 theme variables (light/dark)
-    ├── App.css           # Global custom style overrides
-    ├── api/              # API Client Service Layer
-    │   ├── auth.ts       # Authentication API helper routines
-    │   └── invoices.ts   # Invoice and ledger synchronization API utilities
-    ├── components/       # Shared UI components
-    │   ├── InvoiceDetailModal.tsx  # Detailed inspection drawer/modal for single invoices
-    │   └── layout/
-    │       └── DashboardLayout.tsx  # Primary application layout shell (sidebar, header, content view)
-    └── pages/            # Core view controllers
-        ├── Login.tsx     # Sign-in portal page
-        ├── Dashboard.tsx # Metrics, interactive calendar heatmap, volume charts, overview table
-        └── Invoices.tsx  # Advanced invoice table containing multi-factor filters, search, CSV export
+    subgraph Backend (FastAPI)
+        API --> Routes[API Routes]
+        Routes --> Services[OCR & Sync Services]
+        Services --> GoogleAPI[Gmail API]
+    end
+
+    subgraph Database (Supabase PostgreSQL)
+        Routes --> DB[(PostgreSQL)]
+        RLS[Row Level Security] --> DB
+    end
 ```
 
 ---
 
-## 2. Core UI Architecture & Flow
+## 2. Directory Structure
 
-### Authentication & Routing (`App.tsx`)
-- Uses a token-based authentication mechanism. Token extraction is handled dynamically via URL query parameters (e.g. during OAuth redirect callback) or local storage.
-- Implements a simple state-based routing controller:
-  - If unauthorized: renders `<Login />`.
-  - If authorized: wraps pages inside `<DashboardLayout />`, switching components dynamically via state mapping (`dashboard` or `invoices`).
-
-### App Layout Shell (`DashboardLayout.tsx`)
-- Sidebar provides navigation commands, active page highlights, and logout handling.
-- Header contains responsive search inputs, alert indicators, user avatar badges, and a toggle button for sidebar expansion on mobile views.
-
-### Dashboard Workspace (`Dashboard.tsx`)
-- **Key Metrics (Stat Cards)**: Total counts, value processed, overdue/review items, with micro-indicators for growth/shrink trends.
-- **Volume Timeline Chart**: Renders a daily cumulative amount chart using `recharts` wrapped with linear gradients.
-- **Activity Calendar Heatmap**: A custom grid reflecting monthly activity. Intensity colors (using transparency levels of the accent color) correspond to invoice counts—similar to GitHub's contribution matrix. Clicking a cell filters the detailed invoice sub-list.
-- **Urgent Action Deck**: Highlights pending and overdue invoices under "Needs Attention".
-
-### Invoices Ledger Grid (`Invoices.tsx`)
-- Powered by `@tanstack/react-table` for modular column rendering, client-side/server-side pagination, sorting, and header configurations.
-- **Multi-factor Filters**: Interactive filters for text search, transaction types, email directions, statuses, document types, date range pickers, and a toggle to omit duplicates.
-- **Features**: Includes direct CSV generation (`handleExportCSV`) and a Gmail-sync trigger mechanism using `@tanstack/react-query` hooks.
+```
+finnex-invoice/
+├── backend/                  # FastAPI Backend Application
+│   ├── app/
+│   │   ├── api/              # Route controllers (auth, invoices)
+│   │   ├── services/         # Sync & OCR (Gmail extraction, text parsing)
+│   │   ├── main.py           # Application entry point (Port 8000)
+│   │   ├── database.py       # SQLAlchemy engine & session configurations
+│   │   └── models.py         # SQLAlchemy database models mapping
+├── frontend/                 # React Frontend Application
+│   ├── src/
+│   │   ├── api/              # API Client fetch methods
+│   │   ├── components/       # Reusable components (drawers, charts, layout)
+│   │   ├── context/          # Shared state context (InvoiceContext)
+│   │   ├── pages/            # Core views (Dashboard, Invoices, Settings, etc.)
+│   │   ├── App.tsx           # Application router and entrypoint
+│   │   └── index.css         # Styling system & theme variables (Port 3000)
+```
 
 ---
 
-## 3. Design & Styling Opinion
+## 3. Technology Stack
 
-### Strengths
-1. **Design System & Theme Control**:
-   - The theme configuration (`src/index.css`) maps standard HSL parameters to Tailwind variables (similar to the Shadcn UI design system).
-   - Local CSS-in-JS injection in the root dashboard allows smooth real-time toggling of dark and light theme palettes.
-2. **Visual Hierarchy & Premium Feel**:
-   - Modern aesthetics are achieved using vibrant status colors (neon greens, deep reds, amber) combined with subtle semi-transparent backgrounds (`rgba(...)`) on active states.
-   - Clean, monospace font faces are applied to alphanumeric data (Invoice IDs, values, and dates) for high financial readability.
-   - Interactive components utilize micro-interactions (`hover:bg-secondary`, transitions, shadows, keyboard focus highlights).
-3. **High Information Density**:
-   - Important data points (duplicate tags, confidence scores, transaction types, event stages) are effectively organized without cluttering the screen.
+### Backend
+- **Core Framework:** FastAPI (Python)
+- **Database Engine:** SQLAlchemy ORM (asyncpg driver)
+- **Email Ingestion:** Google Gmail API (OAuth 2.0)
+- **Data Extraction:** PDF text parsing & Gemini OCR extraction pipelines
 
-### Suggestions for Improvement & Refactoring
-1. **Routing Framework Integration**:
-   - *Current state*: Renders conditionally based on React state variables.
-   - *Recommendation*: As views scale, introduce a client-side routing library (e.g., **React Router** or **TanStack Router**) to enable persistent state in paths, browser backward/forward navigation, and shareable links.
-2. **Component Decomposition**:
-   - *Current state*: `Dashboard.tsx` is ~735 lines, and `Invoices.tsx` is ~800 lines.
-   - *Recommendation*: Decouple heavy structural code blocks into smaller, single-responsibility files (e.g. `<StatCards />`, `<CalendarHeatmap />`, `<FilterToolbar />`, and `<InvoiceTable />`). This increases reuse, isolation, and improves testing surfaces.
-3. **Decentralized State & Themes**:
-   - *Current state*: Themes are toggled locally within `<Dashboard />` by mutating the custom `data-theme` attribute and injecting styles.
-   - *Recommendation*: Migrate this to a global `ThemeProvider` context so that all views (including `<Login />` and layouts) naturally align without styling synchronization discrepancies.
+### Frontend
+- **Core Framework:** React 19 (TypeScript)
+- **Bundler:** Vite
+- **Styling:** Vanilla CSS variables + Tailwind tokens
+- **Theme Palette:** 
+  - Primary Dark Surface: `#0B0F3D` (Deep Navy)
+  - Accent Highlight: `#D9FF4A` (Electric Lime)
+  - Base Canvas: `#FFFFFF` / `#FAFAFA`
+- **Charts:** Recharts (Money Flow, Sparklines, Spend Areas)
+
+### Database
+- **Provider:** Supabase PostgreSQL
+- **Security:** Row Level Security (RLS) policies scoped to `auth.uid()` isolating workspace organizations and invoice records.
+
+---
+
+## 4. Frontend View Directories
+
+1. **Overview Dashboard (`Dashboard.tsx`)**
+   - Single-purpose dashboard cards with toggleable **Simple** (plain language labels) and **Detailed** (recharts sparklines) modes.
+   - Money Flow composed charts with thick columns comparing monthly income vs expenses.
+2. **Invoices spreadsheet (`Invoices.tsx`)**
+   - Grid table with row checkboxes, multi-factor filter toolbar, and a floating bulk action drawer (Mark Paid, Recategorize).
+   - Side panel drawer (`InvoiceDetailModal.tsx`) sliding in from the right to review extraction details, line items, and attachments.
+3. **Vendors (`Vendors.tsx`)**
+   - Directory listing of suppliers, total spending metrics, YTD transaction volumes, and spend trend Area Charts.
+4. **Categories (`Categories.tsx`)**
+   - Spend ratio breakdowns, quick-rename category fields, and category invoice lookups.
+5. **Recurring (`Recurring.tsx`)**
+   - Automatic heuristic detection of monthly subscriptions or cadence charges.
+6. **Settings (`Settings.tsx`)**
+   - Sub-navigation view enclosing Profile adjustments, team rosters, Gmail connections, and data export mechanisms. Includes a test toggle for Admin/Member privileges.
