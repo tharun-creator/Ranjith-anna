@@ -5,7 +5,7 @@ import { Invoices } from '@/pages/Invoices'
 import { Vendors } from '@/pages/Vendors'
 import { Categories } from '@/pages/Categories'
 import { Recurring } from '@/pages/Recurring'
-import { ConnectedAccounts } from '@/pages/ConnectedAccounts'
+import { Settings } from '@/pages/Settings'
 import { Login } from '@/pages/Login'
 import { getToken, setToken } from '@/api/auth'
 import { InvoiceProvider, useInvoices } from '@/context/InvoiceContext'
@@ -43,7 +43,7 @@ function AppContent() {
         return <Recurring />
       case 'connected':
       case 'settings':
-        return <ConnectedAccounts />
+        return <Settings />
       default:
         return <Dashboard onViewAllInvoices={() => setActiveTab('invoices')} />
     }
