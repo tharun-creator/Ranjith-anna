@@ -16,7 +16,8 @@ import {
   ToggleLeft,
   ToggleRight,
   Sun,
-  Moon
+  Moon,
+  Sparkles
 } from 'lucide-react'
 import { clearToken } from '@/api/auth'
 import { useInvoices } from '@/context/InvoiceContext'
@@ -37,27 +38,27 @@ export const DashboardLayout = ({
   const navItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'invoices', label: 'Invoices', icon: FileText },
-    { id: 'vendors', label: 'Vendors & Senders', icon: Users },
+    { id: 'vendors', label: 'Vendors', icon: Users },
     { id: 'categories', label: 'Categories', icon: FolderClosed },
     { id: 'recurring', label: 'Recurring', icon: RefreshCcw },
-    { id: 'connected', label: 'Connected Accounts', icon: Mail },
+    { id: 'connected', label: 'Integrations', icon: Mail },
   ]
 
   return (
-    <div className={`min-h-screen bg-background flex text-foreground ${theme}`}>
-      {/* Sidebar (dark navy #0B0F3D) */}
+    <div className={`min-h-screen bg-[var(--bg-page)] flex text-[var(--text-primary)]`}>
+      {/* Fixed Sidebar (dark navy --bg-sidebar) */}
       <aside 
-        style={{ backgroundColor: '#0B0F3D' }}
-        className={`border-r border-white/10 text-white flex-col transition-all duration-200 hidden md:flex ${
+        style={{ backgroundColor: 'var(--bg-sidebar)' }}
+        className={`border-r border-white/5 text-white flex flex-col transition-all duration-200 hidden md:flex ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
-        <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
+        <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
           <div className="flex items-center">
-            <div className="w-9 h-9 bg-[#D9FF4A] rounded-xl flex items-center justify-center mr-3 shadow-sm">
-              <span className="text-[#0B0F3D] font-extrabold text-lg">F</span>
+            <div className="w-9 h-9 bg-[var(--accent-lime)] rounded-xl flex items-center justify-center mr-3 shadow-sm">
+              <span className="text-[var(--accent-lime-text)] font-black text-lg">F</span>
             </div>
-            {!isCollapsed && <h1 className="font-extrabold text-lg tracking-tight text-white select-none">Finnex</h1>}
+            {!isCollapsed && <h1 className="font-extrabold text-base tracking-tight text-white select-none">Finnex</h1>}
           </div>
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -75,12 +76,12 @@ export const DashboardLayout = ({
               <button 
                 key={item.id}
                 onClick={() => setCurrentPage(item.id)}
-                className={`flex w-full items-center py-2.5 rounded-xl group font-semibold text-xs transition-all relative ${
+                className={`flex w-full items-center py-2.5 rounded-full group font-semibold text-xs transition-all relative ${
                   isCollapsed ? 'justify-center px-0' : 'px-4'
                 } ${
                   isActive 
-                    ? 'bg-white/10 text-[#D9FF4A] font-bold border-l-2 border-[#D9FF4A]' 
-                    : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    ? 'bg-[var(--accent-lime)] text-[var(--accent-lime-text)] font-bold shadow-md' 
+                    : 'text-[var(--text-on-dark-secondary)] hover:bg-white/5 hover:text-white'
                 }`}
                 title={item.label}
               >
@@ -92,12 +93,12 @@ export const DashboardLayout = ({
           
           <button 
             onClick={() => setCurrentPage('settings')}
-            className={`flex w-full items-center py-2.5 rounded-xl group font-semibold text-xs transition-all ${
+            className={`flex w-full items-center py-2.5 rounded-full group font-semibold text-xs transition-all ${
               isCollapsed ? 'justify-center px-0' : 'px-4'
             } ${
               currentPage === 'settings' 
-                ? 'bg-white/10 text-[#D9FF4A] font-bold border-l-2 border-[#D9FF4A]' 
-                : 'text-white/60 hover:bg-white/5 hover:text-white'
+                ? 'bg-[var(--accent-lime)] text-[var(--accent-lime-text)] font-bold shadow-md' 
+                : 'text-[var(--text-on-dark-secondary)] hover:bg-white/5 hover:text-white'
             }`}
             title="Settings"
           >
@@ -106,27 +107,34 @@ export const DashboardLayout = ({
           </button>
         </nav>
         
-        {/* Connection status and user details */}
+        {/* Bottom promo / CTA card in sidebar */}
         {!isCollapsed && (
-          <div className="p-4.5 mx-4 mb-4 bg-white/5 rounded-xl border border-white/5 space-y-2 text-[10px] text-white/70">
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#D9FF4A] animate-pulse" />
-              <span className="font-semibold text-white/90">Gmail connected</span>
+          <div className="p-4 mx-4 mb-4 bg-white/5 rounded-2xl border border-white/5 text-xs text-white">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[var(--accent-lime)]" />
+              <span className="font-bold">Sync Invoices</span>
             </div>
-            <p className="opacity-80">synced 2 min ago</p>
+            <p className="text-[10px] text-[var(--text-on-dark-secondary)] leading-relaxed mb-3">
+              Connect Gmail to automate daily ledger tracking.
+            </p>
+            <button 
+              onClick={() => setCurrentPage('connected')}
+              className="w-full py-1.5 bg-[var(--accent-lime)] text-[var(--accent-lime-text)] font-extrabold text-[10px] rounded-full text-center hover:opacity-90 shadow-sm cursor-pointer"
+            >
+              Connect Gmail
+            </button>
           </div>
         )}
 
-        <div className="p-4 border-t border-white/10 space-y-2">
-          {/* Collapse Expert Toggle */}
+        <div className="p-4 border-t border-white/5 space-y-2">
           {!isCollapsed && (
-            <div className="flex items-center justify-between px-3 text-[10px] text-white/60 font-semibold mb-2">
+            <div className="flex items-center justify-between px-3 text-[10px] text-[var(--text-on-dark-secondary)] font-semibold mb-2">
               <span>Show Jargon</span>
               <button 
                 onClick={() => setExpertMode(!expertMode)}
                 className="text-white/80 hover:text-white cursor-pointer"
               >
-                {expertMode ? <ToggleRight className="w-5 h-5 text-[#D9FF4A]" /> : <ToggleLeft className="w-5 h-5" />}
+                {expertMode ? <ToggleRight className="w-5 h-5 text-[var(--accent-lime)]" /> : <ToggleLeft className="w-5 h-5" />}
               </button>
             </div>
           )}
@@ -136,7 +144,7 @@ export const DashboardLayout = ({
               clearToken()
               window.location.reload()
             }}
-            className={`flex items-center w-full py-2.5 text-white/55 hover:bg-white/5 hover:text-white rounded-xl group font-semibold text-xs transition-all cursor-pointer ${
+            className={`flex items-center w-full py-2.5 text-[var(--text-on-dark-secondary)] hover:bg-white/5 hover:text-white rounded-full group font-semibold text-xs transition-all cursor-pointer ${
               isCollapsed ? 'justify-center px-0' : 'px-4'
             }`}
             title="Log out"
@@ -149,8 +157,8 @@ export const DashboardLayout = ({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <header className="h-20 flex items-center justify-between px-6 sm:px-8 border-b border-border bg-card/65 backdrop-blur-md sticky top-0 z-30 shadow-sm">
+        {/* Top Header */}
+        <header className="h-20 flex items-center justify-between px-6 sm:px-8 bg-white sticky top-0 z-30 border-b border-[var(--border)] shadow-sm">
           <div className="flex items-center flex-1">
             <button 
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -158,39 +166,44 @@ export const DashboardLayout = ({
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="max-w-md w-full relative hidden sm:block">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <input
-                type="text"
-                className="block w-full pl-10 pr-3.5 py-2 border border-border rounded-xl leading-5 bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#D9FF4A]/40 focus:border-border sm:text-xs font-semibold transition-all"
-                placeholder="Search invoices, vendors..."
-              />
+            <div className="hidden sm:block">
+              <h2 className="text-sm font-extrabold text-[var(--text-primary)]">Welcome back, John Doe</h2>
+              <p className="text-[10px] text-[var(--text-secondary)] font-medium">Workspace: Finnex Corp</p>
             </div>
           </div>
           
           <div className="ml-4 flex items-center md:ml-6 gap-4">
-            {/* Theme Toggle in Header */}
+            <div className="max-w-xs w-56 relative hidden md:block">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-3.5 w-3.5 text-[var(--text-secondary)]" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-9 pr-3 py-1.5 border border-[var(--border)] rounded-[var(--radius-pill)] leading-5 bg-[var(--bg-page)] text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-lime)] sm:text-xs font-semibold"
+                placeholder="Search invoices, senders..."
+              />
+            </div>
+
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted transition-all cursor-pointer border border-border"
+              className="p-2 text-[var(--text-primary)] hover:bg-[var(--bg-page)] rounded-full transition-all cursor-pointer border border-[var(--border)]"
             >
-              {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
-            <button className="p-2 text-muted-foreground hover:text-foreground relative transition-all rounded-xl hover:bg-muted border border-border">
-              <span className="absolute top-2 right-2 block h-1.5 w-1.5 rounded-full bg-red-500 ring-2 ring-card" />
-              <Bell className="h-4.5 w-4.5" />
+            <button className="p-2 text-[var(--text-primary)] hover:bg-[var(--bg-page)] relative transition-all rounded-full border border-[var(--border)]">
+              <span className="absolute top-2 right-2 block h-1.5 w-1.5 rounded-full bg-red-500 ring-2 ring-white" />
+              <Bell className="h-4 w-4" />
             </button>
-            <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground border border-border shadow-xs flex items-center justify-center font-bold text-xs">
+            
+            <div className="h-9 w-9 rounded-full bg-[var(--primary)] text-white flex items-center justify-center font-bold text-xs border border-[var(--border)]">
               JD
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-background">
+        <main className="flex-1 overflow-auto bg-[var(--bg-page)]">
           <div className="max-w-7xl mx-auto px-6 sm:px-8 py-8">
             {children}
           </div>
@@ -202,13 +215,13 @@ export const DashboardLayout = ({
         <div className="fixed inset-0 z-50 flex md:hidden" onClick={() => setMobileOpen(false)}>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs" />
           <aside 
-            style={{ backgroundColor: '#0B0F3D' }}
-            className="relative flex flex-col w-64 max-w-xs h-full text-white border-r border-white/10"
+            style={{ backgroundColor: 'var(--bg-sidebar)' }}
+            className="relative flex flex-col w-64 max-w-xs h-full text-white border-r border-white/5"
             onClick={e => e.stopPropagation()}
           >
-            <div className="h-20 flex items-center px-6 border-b border-white/10">
-              <div className="w-8 h-8 bg-[#D9FF4A] rounded-xl flex items-center justify-center mr-3">
-                <span className="text-[#0B0F3D] font-extrabold text-sm">F</span>
+            <div className="h-20 flex items-center px-6 border-b border-white/5">
+              <div className="w-8 h-8 bg-[var(--accent-lime)] rounded-xl flex items-center justify-center mr-3">
+                <span className="text-[var(--accent-lime-text)] font-extrabold text-sm">F</span>
               </div>
               <h1 className="font-extrabold text-base tracking-tight text-white">Finnex</h1>
             </div>
@@ -222,10 +235,10 @@ export const DashboardLayout = ({
                       setCurrentPage(item.id)
                       setMobileOpen(false)
                     }}
-                    className={`flex w-full items-center px-4 py-2.5 rounded-xl font-semibold text-xs transition-all ${
+                    className={`flex w-full items-center px-4 py-2.5 rounded-full font-semibold text-xs transition-all ${
                       currentPage === item.id 
-                        ? 'bg-white/10 text-[#D9FF4A] font-bold border-l-2 border-[#D9FF4A]' 
-                        : 'text-white/60 hover:bg-white/5 hover:text-white'
+                        ? 'bg-[var(--accent-lime)] text-[var(--accent-lime-text)] font-bold shadow-md' 
+                        : 'text-[var(--text-on-dark-secondary)] hover:bg-white/5 hover:text-white'
                     }`}
                   >
                     <Icon className="w-4 h-4 mr-3" />

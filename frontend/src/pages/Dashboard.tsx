@@ -5,7 +5,10 @@ import {
   TrendingDown, 
   Wallet, 
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  Calendar,
+  FolderClosed,
+  ChevronDown
 } from 'lucide-react'
 import { 
   ComposedChart, 
@@ -20,10 +23,10 @@ import {
   Area
 } from 'recharts'
 
-
 export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => void }) => {
   const { invoices, expertMode, setActiveTab } = useInvoices()
   const [simpleMode, setSimpleMode] = useState(true)
+  const [timePeriod, setTimePeriod] = useState('Weekly')
 
   const formatINR = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -41,13 +44,11 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
 
   // --- Aggregate Stats ---
   const aggregates = useMemo(() => {
-    // Current month totals (July 2026 for mock context, or latest month present)
     const currentMonthInvoices = invoices.filter(inv => inv.invoice_date?.startsWith('2026-07'))
     const totalSpend = currentMonthInvoices
       .filter(inv => (inv.transaction_type || 'EXPENSE') === 'EXPENSE')
       .reduce((sum, inv) => sum + getAmountINR(inv), 0)
 
-    // Previous month (June 2026) for trend calculation
     const prevMonthInvoices = invoices.filter(inv => inv.invoice_date?.startsWith('2026-06'))
     const prevSpend = prevMonthInvoices
       .filter(inv => (inv.transaction_type || 'EXPENSE') === 'EXPENSE')
@@ -56,19 +57,16 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
     const spendDiff = totalSpend - prevSpend
     const spendPercent = prevSpend > 0 ? (Math.abs(spendDiff) / prevSpend) * 100 : 0
 
-    // Overdue stats
     const overdueList = invoices.filter(inv => inv.status === 'overdue')
     const overdueCount = overdueList.length
     const overdueAmount = overdueList.reduce((sum, inv) => sum + getAmountINR(inv), 0)
 
-    // Upcoming stats
     const upcomingList = invoices
       .filter(inv => inv.status === 'pending')
       .sort((a, b) => new Date(a.due_date || '').getTime() - new Date(b.due_date || '').getTime())
     const upcomingCount = upcomingList.length
     const upcomingAmount = upcomingList.reduce((sum, inv) => sum + getAmountINR(inv), 0)
 
-    // Top Category this month
     const categorySpends: Record<string, { name: string, total: number }> = {}
     currentMonthInvoices.forEach(inv => {
       const code = inv.ledger_code || 'UNCATEGORIZED'
@@ -78,7 +76,6 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
     })
     const topCategory = Object.values(categorySpends).sort((a, b) => b.total - a.total)[0] || { name: 'None', total: 0 }
 
-    // Top Vendor this month
     const vendorSpends: Record<string, number> = {}
     currentMonthInvoices.forEach(inv => {
       const name = inv.vendor_name || 'Unknown Vendor'
@@ -94,7 +91,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
       overdueAmount,
       upcomingCount,
       upcomingAmount,
-      upcomingInvoices: upcomingList.slice(0, 3),
+      upcomingInvoices: upcomingList.slice(0, 4),
       topCategory,
       topVendorName: topVendor[0],
       topVendorAmount: topVendor[1]
@@ -112,7 +109,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
     ]
   }, [aggregates.totalSpend])
 
-  // Money Flow Annual Data
+  // Money Flow Data
   const annualChartData = useMemo(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     return months.map((m, idx) => {
@@ -133,37 +130,49 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
     })
   }, [invoices])
 
+  // Soft chip color rotation helper
+  const getCategoryChipColors = (code: string) => {
+    const hash = code.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const options = [
+      { bg: 'var(--chip-purple-bg)', fg: 'var(--chip-purple-fg)' },
+      { bg: 'var(--chip-green-bg)', fg: 'var(--chip-green-fg)' },
+      { bg: 'var(--chip-peach-bg)', fg: 'var(--chip-peach-fg)' },
+      { bg: 'var(--chip-blue-bg)', fg: 'var(--chip-blue-fg)' }
+    ]
+    return options[hash % options.length]
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground select-none">Overview</h2>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+          <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)] select-none">Overview</h2>
+          <p className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider font-extrabold">
             {expertMode ? 'Finance dashboard & ledger stats' : 'Your spending summary at a glance'}
           </p>
         </div>
 
-        {/* Mode controls */}
+        {/* Simple vs Detailed controls */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Mode:</span>
-          <div className="bg-card border border-border p-0.5 rounded-xl shadow-xs flex">
+          <span className="text-[9px] text-[var(--text-secondary)] font-extrabold uppercase tracking-wider">Mode:</span>
+          <div className="bg-white border border-[var(--border)] p-0.5 rounded-full shadow-xs flex">
             <button
               onClick={() => setSimpleMode(true)}
-              className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+              className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${
                 simpleMode 
-                  ? 'bg-primary text-primary-foreground shadow-xs' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-[var(--primary)] text-white shadow-xs' 
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               Simple
             </button>
             <button
               onClick={() => setSimpleMode(false)}
-              className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+              className={`px-3 py-1 rounded-full text-[9px] font-bold transition-all ${
                 !simpleMode 
-                  ? 'bg-primary text-primary-foreground shadow-xs' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-[var(--primary)] text-white shadow-xs' 
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
               Detailed
@@ -172,212 +181,319 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
         </div>
       </div>
 
-      {/* --- GRID: ONE IDEA PER COMPONENT --- */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/* Two Column Grid */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
         
-        {/* Card 1: Total Spend */}
-        <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex flex-col justify-between min-h-[170px] relative overflow-hidden group hover:shadow-md transition-all">
-          <div>
-            <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <Wallet className="w-3.5 h-3.5" /> 
-              {expertMode ? 'Total Expenses (Current Month)' : 'How much I spent this month'}
-            </span>
-            <h3 className="text-2xl font-extrabold tracking-tight mt-3 text-foreground font-mono">
-              {formatINR(aggregates.totalSpend)}
-            </h3>
+        {/* Left Side: Stats, Charts, Activity (Width: ~70%) */}
+        <div className="flex-1 w-full space-y-6 lg:max-w-[70%]">
+          
+          {/* Stat Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            
+            {/* Stat 1: Total Spend */}
+            <div className="bg-white border border-[var(--border)] p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[150px] relative transition-all hover:shadow-md">
+              <div className="flex justify-between items-start">
+                <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+                  {expertMode ? 'Expenses' : 'Spent'}
+                </span>
+                <span className="p-1.5 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--chip-green-bg)', color: 'var(--chip-green-fg)' }}>
+                  <Wallet className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] font-mono leading-none">
+                  {formatINR(aggregates.totalSpend)}
+                </h3>
+                
+                {!simpleMode && (
+                  <div className="h-6 w-full mt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={sparklineData}>
+                        <Area type="monotone" dataKey="val" stroke="var(--accent-lime)" strokeWidth={1.5} fill="none" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1.5 mt-2 text-[9px] font-extrabold">
+                  <span className={`flex items-center gap-0.5 ${aggregates.isSpendUp ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {aggregates.isSpendUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
+                    {Math.round(aggregates.spendPercent)}%
+                  </span>
+                  <span className="text-[var(--text-secondary)]">vs June</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Stat 2: Bills Due */}
+            <div 
+              onClick={() => setActiveTab('invoices')}
+              className="bg-white border border-[var(--border)] p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[150px] transition-all hover:shadow-md cursor-pointer"
+            >
+              <div className="flex justify-between items-start">
+                <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+                  {expertMode ? 'Outstanding' : 'Due Soon'}
+                </span>
+                <span className="p-1.5 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--chip-blue-bg)', color: 'var(--chip-blue-fg)' }}>
+                  <Calendar className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] font-mono leading-none">
+                  {formatINR(aggregates.upcomingAmount)}
+                </h3>
+                <p className="text-[9px] text-[var(--text-secondary)] font-extrabold mt-2 uppercase">
+                  {aggregates.upcomingCount} pending bills
+                </p>
+              </div>
+            </div>
+
+            {/* Stat 3: Overdue Invoices */}
+            <div 
+              onClick={() => setActiveTab('invoices')}
+              className={`p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[150px] transition-all hover:shadow-md cursor-pointer border ${
+                aggregates.overdueCount > 0 
+                  ? 'border-red-200 bg-red-50/20' 
+                  : 'bg-white border-[var(--border)]'
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+                  Overdue
+                </span>
+                <span className="p-1.5 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--chip-peach-bg)', color: 'var(--chip-peach-fg)' }}>
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] font-mono leading-none">
+                  {formatINR(aggregates.overdueAmount)}
+                </h3>
+                <p className={`text-[9px] font-extrabold mt-2 uppercase ${aggregates.overdueCount > 0 ? 'text-[var(--status-overdue-text)]' : 'text-[var(--text-secondary)]'}`}>
+                  {aggregates.overdueCount} require action
+                </p>
+              </div>
+            </div>
+
+            {/* Stat 4: Top Category */}
+            <div 
+              onClick={() => setActiveTab('categories')}
+              className="bg-white border border-[var(--border)] p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[150px] transition-all hover:shadow-md cursor-pointer"
+            >
+              <div className="flex justify-between items-start">
+                <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+                  Top Category
+                </span>
+                <span className="p-1.5 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--chip-purple-bg)', color: 'var(--chip-purple-fg)' }}>
+                  <FolderClosed className="w-3.5 h-3.5" />
+                </span>
+              </div>
+              <div className="mt-2">
+                <h3 className="text-sm font-extrabold text-[var(--text-primary)] truncate">
+                  {aggregates.topCategory.name}
+                </h3>
+                <p className="text-[9px] text-[var(--text-secondary)] font-extrabold mt-2 uppercase font-mono">
+                  {formatINR(aggregates.topCategory.total)} YTD
+                </p>
+              </div>
+            </div>
+
           </div>
 
-          {/* Sparkline (Detailed mode only) */}
-          {!simpleMode && (
-            <div className="h-8 w-full mt-2">
+          {/* Money Flow composed chart */}
+          <div className="bg-white border border-[var(--border)] p-6 rounded-[var(--radius-lg)] shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-extrabold text-sm text-[var(--text-primary)]">Money Flow</h3>
+                <p className="text-[10px] text-[var(--text-secondary)] font-medium">Income cash vs business expenses</p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {/* Period dropdown */}
+                <div className="relative">
+                  <button 
+                    onClick={() => setTimePeriod(timePeriod === 'Weekly' ? 'Monthly' : 'Weekly')}
+                    className="flex items-center gap-1.5 px-3 py-1 border border-[var(--border)] rounded-full text-[9px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-white cursor-pointer"
+                  >
+                    <span>{timePeriod}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-3 text-[9px] font-extrabold text-[var(--text-secondary)]">
+                  <div className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent-lime)]" />
+                    <span>Income</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--border)]" />
+                    <span>Expenses</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={sparklineData}>
-                  <Area type="monotone" dataKey="val" stroke="var(--accent)" strokeWidth={1.5} fill="none" />
-                </AreaChart>
+                <ComposedChart data={annualChartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 9, fontWeight: 'bold' }} />
+                  <YAxis tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val/1000}k`} tick={{ fill: 'var(--text-secondary)', fontSize: 9, fontWeight: 'bold' }} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'transparent', borderRadius: '12px' }}
+                    labelStyle={{ color: 'var(--text-on-dark)', fontWeight: 'bold', fontSize: '10px' }}
+                    itemStyle={{ color: 'var(--accent-lime)', fontSize: '11px', fontWeight: 'bold' }}
+                  />
+                  <Bar dataKey="Income" fill="var(--accent-lime)" radius={[6, 6, 0, 0]} barSize={16} />
+                  <Bar dataKey="Expense" fill="var(--border)" radius={[6, 6, 0, 0]} barSize={16} />
+                  <Line type="monotone" dataKey="Income" stroke="var(--text-primary)" strokeWidth={2} dot={false} />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
-          )}
-
-          <div className="flex items-center gap-2 mt-4">
-            <span className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold ${
-              aggregates.isSpendUp 
-                ? 'bg-red-500/10 text-red-500' 
-                : 'bg-emerald-500/10 text-emerald-500'
-            }`}>
-              {aggregates.isSpendUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-              <span>{Math.round(aggregates.spendPercent)}%</span>
-            </span>
-            <span className="text-[10px] text-muted-foreground">vs last month</span>
-          </div>
-        </div>
-
-        <div 
-          onClick={() => {
-            setActiveTab('invoices')
-            if (onViewAllInvoices) onViewAllInvoices()
-          }}
-          className="bg-card border border-border p-6 rounded-2xl shadow-sm hover:border-accent cursor-pointer transition-all flex flex-col justify-between min-h-[170px]"
-        >
-          <div>
-            <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
-              {expertMode ? 'Outstanding Payments' : 'Bills due soon'}
-            </span>
-            <div className="flex justify-between items-baseline mt-3">
-              <h3 className="text-2xl font-extrabold tracking-tight text-foreground font-mono">
-                {formatINR(aggregates.upcomingAmount)}
-              </h3>
-              <span className="text-[10px] text-muted-foreground font-semibold">{aggregates.upcomingCount} pending</span>
-            </div>
           </div>
 
-          <div className="mt-4 border-t border-border pt-3 space-y-1">
-            {aggregates.upcomingInvoices.map(inv => (
-              <div key={inv.id} className="flex justify-between text-[10px] font-medium text-muted-foreground">
-                <span className="truncate max-w-[120px] text-foreground font-bold">{inv.vendor_name}</span>
-                <span className="font-mono">{formatINR(getAmountINR(inv))}</span>
+          {/* Recent Activity hybrid list/table */}
+          <div className="bg-white border border-[var(--border)] rounded-[var(--radius-lg)] shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-[var(--border)] flex justify-between items-center">
+              <div>
+                <h3 className="font-extrabold text-sm text-[var(--text-primary)]">Recent Activity</h3>
+                <p className="text-[10px] text-[var(--text-secondary)] font-medium">Invoices parsed from connected accounts</p>
               </div>
-            ))}
+              <button 
+                onClick={onViewAllInvoices}
+                className="text-[10px] text-[var(--text-secondary)] font-extrabold hover:text-[var(--text-primary)] flex items-center gap-0.5 cursor-pointer"
+              >
+                <span>View all</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[var(--border)] text-[9px] text-[var(--text-secondary)] uppercase tracking-wider font-extrabold bg-muted/20">
+                    <th className="p-3">Sender / Vendor</th>
+                    <th className="p-3">Date</th>
+                    <th className="p-3">Category</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3 text-right">Amount (INR)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)] text-xs font-semibold">
+                  {invoices.slice(0, 5).map(inv => {
+                    const status = inv.status?.toLowerCase() || 'pending'
+                    const chipColors = getCategoryChipColors(inv.ledger_code || 'UNCATEGORIZED')
+                    return (
+                      <tr key={inv.id} className="hover:bg-[var(--bg-page)]/40 transition-colors group cursor-pointer">
+                        <td className="p-3 font-extrabold text-[var(--text-primary)]">
+                          {inv.vendor_name}
+                        </td>
+                        <td className="p-3 font-mono text-[var(--text-secondary)] text-[10px]">
+                          {inv.invoice_date}
+                        </td>
+                        <td className="p-3">
+                          <span 
+                            className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                            style={{ backgroundColor: chipColors.bg, color: chipColors.fg }}
+                          >
+                            {inv.ledger_code}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span 
+                            className="px-2.5 py-0.5 rounded-[var(--radius-pill)] text-[9px] font-bold uppercase tracking-wider inline-block"
+                            style={{
+                              backgroundColor: status === 'paid' ? 'var(--status-paid-bg)' : status === 'pending' ? 'var(--status-pending-bg)' : 'var(--status-overdue-bg)',
+                              color: status === 'paid' ? 'var(--status-paid-text)' : status === 'pending' ? 'var(--status-pending-text)' : 'var(--status-overdue-text)'
+                            }}
+                          >
+                            {status}
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono font-extrabold text-right text-[var(--text-primary)]">
+                          {formatINR(getAmountINR(inv))}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
+
         </div>
 
-        {/* Card 3: Overdue (Only displayed if non-zero) */}
-        {aggregates.overdueCount > 0 && (
-          <div className="bg-card border border-red-500/30 p-6 rounded-2xl shadow-sm flex flex-col justify-between min-h-[170px] relative overflow-hidden">
-            <div>
-              <span className="text-red-500 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                <ShieldAlert className="w-3.5 h-3.5" /> Overdue Invoices
+        {/* Right Side: Spotlight & Due Calendar (Width: ~30%) */}
+        <div className="w-full lg:w-80 space-y-6">
+          
+          {/* Spotlight Supplier Promo card */}
+          <div className="bg-[var(--bg-sidebar)] text-white p-6 rounded-[var(--radius-lg)] shadow-md flex flex-col justify-between min-h-[220px] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-lime)]/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="space-y-4">
+              <span className="inline-block px-2 py-0.5 bg-[var(--accent-lime)]/10 text-[var(--accent-lime)] rounded-full text-[9px] font-bold uppercase tracking-wider">
+                Supplier Spotlight
               </span>
-              <h3 className="text-2xl font-extrabold tracking-tight mt-3 text-red-550 dark:text-red-400 font-mono">
-                {formatINR(aggregates.overdueAmount)}
-              </h3>
+              <div>
+                <h4 className="text-base font-black tracking-tight">{aggregates.topVendorName}</h4>
+                <p className="text-[10px] text-[var(--text-on-dark-secondary)] mt-0.5">Most active service billing provider YTD</p>
+              </div>
             </div>
-            <div className="mt-4 flex items-center justify-between text-[10px] font-bold text-red-500 bg-red-500/10 px-3 py-1 rounded-xl">
-              <span>{aggregates.overdueCount} need attention</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
-        )}
 
-        {/* Card 4: Top Category */}
-        <div 
-          onClick={() => setActiveTab('categories')}
-          className="bg-card border border-border p-6 rounded-2xl shadow-sm hover:border-accent cursor-pointer transition-all flex flex-col justify-between min-h-[170px]"
-        >
-          <div>
-            <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
-              Top category this month
-            </span>
-            <h4 className="text-base font-bold text-foreground mt-3 truncate">{aggregates.topCategory.name}</h4>
-          </div>
-          <div className="mt-4 flex justify-between items-baseline">
-            <span className="text-[10px] text-muted-foreground">Monthly total</span>
-            <span className="text-sm font-extrabold text-foreground font-mono">{formatINR(aggregates.topCategory.total)}</span>
-          </div>
-        </div>
-
-        {/* Card 5: Top Vendor */}
-        <div 
-          onClick={() => setActiveTab('vendors')}
-          className="bg-card border border-border p-6 rounded-2xl shadow-sm hover:border-accent cursor-pointer transition-all flex flex-col justify-between min-h-[170px]"
-        >
-          <div>
-            <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
-              Top supplier/vendor
-            </span>
-            <h4 className="text-base font-bold text-foreground mt-3 truncate">{aggregates.topVendorName}</h4>
-          </div>
-          <div className="mt-4 flex justify-between items-baseline">
-            <span className="text-[10px] text-muted-foreground">YTD spend</span>
-            <span className="text-sm font-extrabold text-foreground font-mono">{formatINR(aggregates.topVendorAmount)}</span>
-          </div>
-        </div>
-
-      </section>
-
-      {/* --- TREND CHART: MONEY FLOW --- */}
-      <section className="bg-card border border-border p-6 rounded-2xl shadow-sm transition-all hover:shadow-md">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="font-extrabold text-sm text-foreground">Money Flow</h3>
-            <p className="text-xs text-muted-foreground">Annual view of incoming revenue vs business expenses</p>
-          </div>
-          <div className="flex items-center gap-4 text-[10px] font-bold">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 rounded-md" style={{ backgroundColor: 'var(--accent)' }}></span>
-              <span>Income</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 rounded-md" style={{ backgroundColor: 'var(--border)' }}></span>
-              <span>Expenses</span>
+            <div className="mt-6 pt-4 border-t border-white/5 flex items-end justify-between">
+              <div>
+                <span className="text-[9px] text-[var(--text-on-dark-secondary)] font-bold uppercase tracking-wider block">YTD Spent</span>
+                <span className="text-lg font-black font-mono text-[var(--accent-lime)]">{formatINR(aggregates.topVendorAmount)}</span>
+              </div>
+              <button 
+                onClick={() => setActiveTab('vendors')}
+                className="p-2 bg-[var(--accent-lime)] hover:opacity-90 text-[var(--accent-lime-text)] rounded-full shadow-sm cursor-pointer transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        </div>
 
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={annualChartData} margin={{ top: 15, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 10, fontWeight: 'bold' }} />
-              <YAxis tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val/1000}k`} tick={{ fill: 'var(--muted-foreground)', fontSize: 10, fontWeight: 'bold' }} />
-              <Tooltip cursor={{ fill: 'var(--hover)', opacity: 0.3 }} />
-              <Bar dataKey="Income" fill="var(--accent)" radius={[8, 8, 0, 0]} barSize={16} />
-              <Bar dataKey="Expense" fill="var(--border)" radius={[8, 8, 0, 0]} barSize={16} />
-              <Line type="monotone" dataKey="Income" stroke="var(--accent-light, #2D6A4F)" strokeWidth={2} strokeDasharray="4 4" dot={false} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
+          {/* Upcoming Bills List Calendar Widget */}
+          <div className="bg-white border border-[var(--border)] p-5 rounded-[var(--radius-lg)] shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-[var(--border)] pb-2.5">
+              <h4 className="font-extrabold text-xs text-[var(--text-primary)]">Upcoming Bills</h4>
+              <span className="text-[9px] text-[var(--text-secondary)] font-extrabold uppercase">Next 30 Days</span>
+            </div>
 
-      {/* --- RECENT ACTIVITY TABLE --- */}
-      <section className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-border">
-          <h3 className="font-extrabold text-sm text-foreground">Recent Activity</h3>
-          <p className="text-xs text-muted-foreground">The latest invoices and transactions synced from Gmail</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-                <th className="p-4">Invoice ID</th>
-                <th className="p-4">Sender / Vendor</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right">Amount (INR)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border text-xs font-medium">
-              {invoices.slice(0, 10).map(inv => (
-                <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="p-4 font-mono text-muted-foreground">{inv.id}</td>
-                  <td className="p-4">
-                    <div>
-                      <div className="font-bold text-foreground">{inv.vendor_name}</div>
-                      <div className="text-[10px] text-muted-foreground truncate max-w-[180px]">{inv.sender}</div>
+            <div className="space-y-2.5">
+              {aggregates.upcomingInvoices.map(inv => (
+                <div 
+                  key={inv.id}
+                  onClick={() => {
+                    setActiveTab('invoices')
+                  }}
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-page)]/20 hover:bg-[var(--bg-page)]/50 cursor-pointer transition-all"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-8 h-8 rounded-lg bg-[var(--chip-blue-bg)] text-[var(--chip-blue-fg)] flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                      {inv.vendor_name.charAt(0)}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="font-extrabold text-[11px] text-[var(--text-primary)] truncate">{inv.vendor_name}</div>
+                      <div className="text-[9px] text-[var(--text-secondary)] font-mono mt-0.5">Due: {inv.due_date}</div>
                     </div>
-                  </td>
-                  <td className="p-4 font-mono">{inv.invoice_date}</td>
-                  <td className="p-4">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary-foreground border border-border">
-                      {inv.ledger_code}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                      inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-800' : 'bg-amber-500/10 text-amber-800'
-                    }`}>
-                      {inv.status}
-                    </span>
-                  </td>
-                  <td className="p-4 font-mono font-bold text-right text-foreground">
-                    {formatINR(getAmountINR(inv))}
-                  </td>
-                </tr>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                </div>
               ))}
-            </tbody>
-          </table>
+
+              {aggregates.upcomingInvoices.length === 0 && (
+                <div className="text-center py-6 text-[var(--text-secondary)] text-[10px]">
+                  No upcoming bills detected.
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
-      </section>
+
+      </div>
     </div>
   )
 }

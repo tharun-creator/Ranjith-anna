@@ -1,109 +1,97 @@
 @import "tailwindcss";
 
 @theme {
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
 
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
 
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
 
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
 
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius-lg);
+  --radius-md: var(--radius-md);
+  --radius-sm: 8px;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 98%; /* #FAFAFA light mode canvas */
-    --foreground: 228 60% 15%; /* Deep navy/dark text */
+    /* Base layouts */
+    --background: #F3F3EF;          /* warm off-white page background */
+    --foreground: #14141F;          /* near-black navy */
+    
+    --card: #FFFFFF;
+    --card-foreground: #14141F;
+    
+    --popover: #FFFFFF;
+    --popover-foreground: #14141F;
 
-    --card: 0 0% 100%; /* Pure white for cards */
-    --card-foreground: 228 60% 15%;
+    --primary: #14141F;
+    --primary-foreground: #CFFF4D;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 228 60% 15%;
+    --secondary: #CFFF4D;
+    --secondary-foreground: #14141F;
 
-    --primary: 235 69% 15%; /* #0B0F3D deep navy */
-    --primary-foreground: 73 100% 64%; /* #D9FF4A electric lime */
+    --muted: #EAEAEE;
+    --muted-foreground: #8A8A94;
 
-    --secondary: 73 100% 64%; /* #D9FF4A electric lime */
-    --secondary-foreground: 235 69% 15%;
+    --accent: #CFFF4D;
+    --accent-foreground: #14141F;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%; /* #6B7280 */
+    --destructive: #E1443D;
+    --destructive-foreground: #FFFFFF;
 
-    --accent: 73 100% 64%;
-    --accent-foreground: 235 69% 15%;
+    --border: #E5E5EB;
+    --input: #E5E5EB;
+    --ring: #14141F;
 
-    --destructive: 0 72% 51%; /* desaturated red */
-    --destructive-foreground: 0 0% 100%;
+    /* Visual Redesign Token Specs */
+    --bg-page: #F3F3EF;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #14141F;
+    --bg-sidebar-hover: #1F1F2E;
 
-    --border: 220 13% 91%; /* #E5E7EB gray-200 */
-    --input: 220 13% 91%;
-    --ring: 235 69% 15%;
+    --accent-lime: #CFFF4D;
+    --accent-lime-text: #14141F;
 
-    --radius: 1rem; /* 16px */
-  }
-  .dark {
-    --background: 235 69% 10%; /* #0B0F3D deep navy */
-    --foreground: 0 0% 98%; /* Light text */
+    --text-primary: #14141F;
+    --text-secondary: #8A8A94;
+    --text-on-dark: #FFFFFF;
+    --text-on-dark-secondary: #9A9AA8;
 
-    --card: 0 0% 4%; /* #0A0A0A near-black card */
-    --card-foreground: 0 0% 98%;
+    /* Status Colors */
+    --status-paid-bg: #E4F9E9;    --status-paid-text: #1E9E4A;
+    --status-pending-bg: #FFF4E0; --status-pending-text: #B9770E;
+    --status-overdue-bg: #FDEAEA; --status-overdue-text: #E1443D;
 
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 98%;
+    /* Category soft tints */
+    --chip-purple-bg: #EDE7FB; --chip-purple-fg: #6F4FE0;
+    --chip-green-bg:  #E4F9EE; --chip-green-fg:  #1E9E6B;
+    --chip-peach-bg:  #FCEDE4; --chip-peach-fg:  #D9722F;
+    --chip-blue-bg:   #E7F1FC; --chip-blue-fg:   #2E7FD9;
 
-    --primary: 73 100% 64%; /* Electric lime */
-    --primary-foreground: 235 69% 15%; /* Navy text */
-
-    --secondary: 235 69% 15%;
-    --secondary-foreground: 73 100% 64%;
-
-    --muted: 235 30% 15%;
-    --muted-foreground: 220 9% 70%;
-
-    --accent: 73 100% 64%;
-    --accent-foreground: 235 69% 15%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 235 30% 18%;
-    --input: 235 30% 18%;
-    --ring: 73 100% 64%;
-
-    --radius: 1rem;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    --shadow-card: 0 1px 2px rgba(20,20,31,0.04), 0 8px 24px rgba(20,20,31,0.05);
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-pill: 999px;
   }
 }
