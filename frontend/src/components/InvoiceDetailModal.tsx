@@ -244,35 +244,35 @@ export const InvoiceDetailModal = ({ invoice, onClose }: InvoiceDetailModalProps
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100 animate-in zoom-in-95 duration-200"
+        className="bg-card border-l border-border h-full w-full max-w-xl shadow-2xl flex flex-col overflow-hidden transform transition-all animate-in slide-in-from-right duration-300"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-secondary/20">
+        <div className="px-6 py-5 border-b border-border flex items-center justify-between bg-primary/5">
           <div>
-            <h3 className="text-lg font-bold text-foreground">
+            <h3 className="text-lg font-bold text-foreground leading-snug">
               {invoice.vendor_name || 'Unknown Vendor'}
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5 font-mono font-medium">
               Invoice Details • {invoice.invoice_number || 'No Number'}
             </p>
           </div>
           <button 
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground hover:bg-secondary p-1.5 rounded-lg transition-colors cursor-pointer"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted p-1.5 rounded-lg transition-colors cursor-pointer border border-border"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Status / Alerts */}
-          <div className="flex flex-wrap items-center justify-between gap-4 bg-secondary/10 p-4 rounded-xl border border-border/50">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-muted p-4 rounded-xl border border-border">
             <div className="flex flex-wrap gap-2">
               {/* Payment Status Badge */}
               {(() => {
