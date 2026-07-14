@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react'
-import { 
-  Sun, Moon, AlertTriangle, ChevronLeft, ChevronRight, 
-  TrendingUp, TrendingDown
-} from 'lucide-react'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Sun, Moon, AlertTriangle } from 'lucide-react'
+import { BarChart as RechartsBarChart, Bar as RechartsBar, ResponsiveContainer as RechartsResponsiveContainer, Tooltip as RechartsTooltip, XAxis as RechartsXAxis, YAxis as RechartsYAxis, CartesianGrid as RechartsCartesianGrid } from 'recharts'
+import { StatCards } from '@/components/StatCards'
+import { CalendarHeatmap } from '@/components/CalendarHeatmap'
 
 // --- Mock Data ---
 interface MockInvoice {
@@ -51,7 +50,7 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>('light') // default light theme for warm cream feel
   const [activeTab, setActiveTab] = useState<'overview' | 'invoices' | 'calendar' | 'ledger'>('overview')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2026, 6, 12)) // July 2026 for mock data
@@ -107,13 +106,19 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
     const data = []
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `2026-07-${String(d).padStart(2, '0')}`
-      const totalAmount = MOCK_INVOICES
-        .filter(inv => inv.date === dateStr)
+      
+      const processedAmount = MOCK_INVOICES
+        .filter(inv => inv.date === dateStr && inv.status === 'paid')
+        .reduce((sum, inv) => sum + convertToINR(inv), 0)
+        
+      const pendingOverdueAmount = MOCK_INVOICES
+        .filter(inv => inv.date === dateStr && (inv.status === 'pending' || inv.status === 'overdue'))
         .reduce((sum, inv) => sum + convertToINR(inv), 0)
       
       data.push({
         day: `07/${String(d).padStart(2, '0')}`,
-        amount: Math.round(totalAmount)
+        processed: Math.round(processedAmount),
+        pendingOverdue: Math.round(pendingOverdueAmount)
       })
     }
     return data
@@ -124,19 +129,15 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
     const year = currentMonth.getFullYear()
     const month = currentMonth.getMonth()
     
-    // First day of the month
     const firstDay = new Date(year, month, 1).getDay()
-    // Days in the current month
     const daysInMonth = new Date(year, month + 1, 0).getDate()
     
     const cells = []
     
-    // Empty padded slots for first week offset
     for (let i = 0; i < firstDay; i++) {
       cells.push(null)
     }
     
-    // Real days
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
       const dayInvoices = MOCK_INVOICES.filter(inv => inv.date === dateStr)
@@ -162,12 +163,9 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
     setSelectedDate(null)
   }
 
-  // --- Unclassified Warning Flag Helper ---
-  const isUnclassified = (invoice: MockInvoice) => invoice.confidence < 80
-
   return (
     <div 
-      className="finnex-root min-h-screen transition-colors duration-200 py-6 px-4 md:px-8"
+      className="finnex-root min-h-screen transition-colors duration-200 py-6"
       data-theme={theme}
       style={{
         backgroundColor: 'var(--background)',
@@ -178,42 +176,41 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
       {/* Theme Variable Injection */}
       <style>{`
         .finnex-root {
-          --background: #0a0a0a;
-          --foreground: #fafafa;
-          --border: #1f1f1f;
-          --card-bg: #121212;
-          --accent: #3291ff;
-          --accent-rgb: 50, 145, 255;
-          --status-paid: #00e676;
-          --status-paid-bg: rgba(0, 230, 118, 0.1);
-          --status-pending: #ffb300;
-          --status-pending-bg: rgba(255, 179, 0, 0.1);
-          --status-overdue: #ff3d00;
-          --status-overdue-bg: rgba(255, 61, 0, 0.1);
-          --muted: #888888;
-          --hover: #1e1e1e;
-          --focus-ring: 0 0 0 2px #3291ff;
+          --background: #F5F3EC;
+          --foreground: #0D2418;
+          --border: #E5E0D5;
+          --card-bg: #ffffff;
+          --accent: #1B4332;
+          --accent-rgb: 27, 67, 50;
+          --status-paid: #1B4332;
+          --status-paid-bg: rgba(27, 67, 50, 0.1);
+          --status-pending: #D97706;
+          --status-pending-bg: rgba(217, 119, 6, 0.1);
+          --status-overdue: #DC2626;
+          --status-overdue-bg: rgba(220, 38, 38, 0.1);
+          --muted: #8C867A;
+          --hover: #F9F8F6;
+          --focus-ring: 0 0 0 2px #1B4332;
         }
 
-        .finnex-root[data-theme="light"] {
-          --background: #ffffff;
-          --foreground: #171717;
-          --border: #eaeaea;
-          --card-bg: #fafafa;
-          --accent: #0070f3;
-          --accent-rgb: 0, 112, 243;
-          --status-paid: #00a000;
-          --status-paid-bg: rgba(0, 160, 0, 0.08);
-          --status-pending: #d97706;
-          --status-pending-bg: rgba(217, 119, 6, 0.08);
-          --status-overdue: #df1b1b;
-          --status-overdue-bg: rgba(223, 27, 27, 0.08);
-          --muted: #666666;
-          --hover: #f5f5f5;
-          --focus-ring: 0 0 0 2px #0070f3;
+        .finnex-root[data-theme="dark"] {
+          --background: #1B4332;
+          --foreground: #FAF9F5;
+          --border: rgba(250, 249, 245, 0.15);
+          --card-bg: #FAF9F5;
+          --accent: #B8E020;
+          --accent-rgb: 184, 224, 32;
+          --status-paid: #2D6A4F;
+          --status-paid-bg: rgba(45, 106, 79, 0.1);
+          --status-pending: #D97706;
+          --status-pending-bg: rgba(217, 119, 6, 0.1);
+          --status-overdue: #DC2626;
+          --status-overdue-bg: rgba(220, 38, 38, 0.1);
+          --muted: #6B7280;
+          --hover: #F3F4F6;
+          --focus-ring: 0 0 0 2px #B8E020;
         }
 
-        /* Keyboard Focus Outline */
         .interactive-el:focus-visible {
           outline: none;
           box-shadow: var(--focus-ring);
@@ -223,24 +220,24 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
       {/* --- Top Bar & Navigation --- */}
       <header className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between border-b border-[var(--border)] pb-4 mb-6 gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[var(--accent)] rounded-lg flex items-center justify-center shadow-sm">
-            <span className="text-white font-bold text-lg select-none">F</span>
+          <div className="w-9 h-9 bg-[var(--accent)] rounded-xl flex items-center justify-center shadow-sm">
+            <span className="text-white dark:text-primary-foreground font-extrabold text-lg select-none">F</span>
           </div>
           <div>
-            <h1 className="font-semibold text-lg tracking-tight select-none">Finnex</h1>
-            <p className="text-[11px] text-[var(--muted)] font-medium uppercase tracking-wider">Ledger Intelligence</p>
+            <h1 className="font-bold text-lg tracking-tight select-none">Finnex</h1>
+            <p className="text-[10px] text-[var(--muted)] font-bold uppercase tracking-wider">Ledger Intelligence</p>
           </div>
         </div>
 
         <div className="flex items-center gap-6">
-          <nav className="flex items-center gap-1 bg-[var(--card-bg)] border border-[var(--border)] p-1 rounded-lg">
+          <nav className="flex items-center gap-1 bg-[var(--card-bg)] border border-[var(--border)] p-1 rounded-xl shadow-sm">
             {(['overview', 'invoices', 'calendar', 'ledger'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
-                className={`interactive-el px-3 py-1.5 rounded-md font-medium text-xs capitalize transition-all duration-150 ${
+                className={`interactive-el px-3 py-1.5 rounded-lg font-bold text-xs capitalize transition-all duration-150 ${
                   activeTab === tab 
-                    ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] shadow-sm' 
+                    ? 'bg-[var(--accent)] text-white dark:text-primary-foreground shadow-sm' 
                     : 'text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--hover)] border border-transparent'
                 }`}
               >
@@ -251,7 +248,7 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
 
           <button
             onClick={toggleTheme}
-            className="interactive-el w-8 h-8 rounded-lg border border-[var(--border)] flex items-center justify-center hover:bg-[var(--hover)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+            className="interactive-el w-8.5 h-8.5 rounded-xl border border-[var(--border)] flex items-center justify-center hover:bg-[var(--hover)] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
             aria-label="Toggle Theme"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -265,121 +262,77 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
         {/* --- Tab: Overview --- */}
         {activeTab === 'overview' && (
           <>
-            {/* Stat Cards */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Card 1 */}
-              <div className="bg-[var(--card-bg)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
-                <div className="flex items-center justify-between text-[var(--muted)] text-xs font-medium">
-                  <span>Total Invoices</span>
-                  <div className="flex items-center text-[var(--status-paid)] gap-0.5 font-mono text-[10px]">
-                    <TrendingUp className="w-3 h-3" />
-                    <span>+12%</span>
-                  </div>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="font-mono text-2xl font-semibold tracking-tight">{stats.totalCount}</span>
-                  <span className="text-[10px] text-[var(--muted)]">this month</span>
-                </div>
-              </div>
+            {/* Stat Cards Component */}
+            <StatCards stats={stats} formatINR={formatINR} />
 
-              {/* Card 2 */}
-              <div className="bg-[var(--card-bg)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
-                <div className="flex items-center justify-between text-[var(--muted)] text-xs font-medium">
-                  <span>Processed Value</span>
-                  <div className="flex items-center text-[var(--status-paid)] gap-0.5 font-mono text-[10px]">
-                    <TrendingUp className="w-3 h-3" />
-                    <span>+8.3%</span>
-                  </div>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="font-mono text-2xl font-semibold tracking-tight">{formatINR(stats.totalAmount)}</span>
-                </div>
-              </div>
-
-              {/* Card 3 */}
-              <div className="bg-[var(--card-bg)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
-                <div className="flex items-center justify-between text-[var(--muted)] text-xs font-medium">
-                  <span>Needs Review</span>
-                  <div className="flex items-center text-[var(--status-pending)] gap-0.5 font-mono text-[10px]">
-                    <TrendingDown className="w-3 h-3" />
-                    <span>-24%</span>
-                  </div>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="font-mono text-2xl font-semibold tracking-tight">{stats.pendingReview}</span>
-                  <span className="text-[10px] text-[var(--muted)]">confidence &lt; 80%</span>
-                </div>
-              </div>
-
-              {/* Card 4 */}
-              <div className="bg-[var(--card-bg)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
-                <div className="flex items-center justify-between text-[var(--muted)] text-xs font-medium">
-                  <span>Overdue Invoices</span>
-                  <div className="flex items-center text-[var(--status-overdue)] gap-0.5 font-mono text-[10px]">
-                    <TrendingUp className="w-3 h-3" />
-                    <span>+10%</span>
-                  </div>
-                </div>
-                <div className="mt-2 flex items-baseline justify-between">
-                  <span className="font-mono text-2xl font-semibold tracking-tight text-[var(--status-overdue)]">{stats.overdueCount}</span>
-                  <span className="text-[10px] text-[var(--status-overdue)] bg-[var(--status-overdue-bg)] px-1.5 py-0.5 rounded font-mono font-medium">At Risk</span>
-                </div>
-              </div>
-            </section>
-
-            {/* Chart Section */}
-            <section className="bg-[var(--card-bg)] border border-[var(--border)] p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-4">
+            {/* Volume Timeline Chart */}
+            <section className="bg-card text-card-foreground border border-border/60 p-6 rounded-[24px] shadow-sm transition-all duration-200 hover:shadow-md">
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="font-semibold text-sm">Invoice Value Volume</h3>
-                  <p className="text-xs text-[var(--muted)]">Daily cumulative processed transaction volume</p>
+                  <h3 className="font-bold text-sm">Invoice Value Volume</h3>
+                  <p className="text-xs text-muted-foreground">Daily cumulative processed transaction volume</p>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-mono text-[var(--muted)]">
-                  <span className="w-2.5 h-2.5 bg-[var(--accent)] rounded-sm"></span>
-                  <span>Amount (INR)</span>
+                <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 bg-[#1B4332] rounded-sm"></span>
+                    <span>Processed (Teal)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 bg-[#B8E020] rounded-sm"></span>
+                    <span>Pending/Overdue (Lime)</span>
+                  </div>
                 </div>
               </div>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0.0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis 
+              <div className="h-72">
+                <RechartsResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <RechartsCartesianGrid stroke="#E6E2D8" strokeDasharray="3 3" vertical={false} />
+                    <RechartsXAxis 
                       dataKey="day" 
                       tickLine={false} 
                       axisLine={false} 
-                      tick={{ fill: 'var(--muted)', fontSize: 10, fontFamily: 'ui-monospace, JetBrains Mono, monospace' }}
+                      tick={{ fill: 'var(--muted)', fontSize: 10, fontWeight: 'bold', fontFamily: 'ui-monospace, JetBrains Mono, monospace' }}
                     />
-                    <YAxis 
+                    <RechartsYAxis 
                       tickLine={false} 
                       axisLine={false} 
                       tickFormatter={(val) => `₹${val/1000}k`}
-                      tick={{ fill: 'var(--muted)', fontSize: 10, fontFamily: 'ui-monospace, JetBrains Mono, monospace' }}
+                      tick={{ fill: 'var(--muted)', fontSize: 10, fontWeight: 'bold', fontFamily: 'ui-monospace, JetBrains Mono, monospace' }}
                     />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'var(--card-bg)',
-                        borderColor: 'var(--border)',
-                        color: 'var(--foreground)',
-                        fontFamily: 'ui-monospace, JetBrains Mono, monospace',
-                        fontSize: 12,
-                        borderRadius: 6
+                    <RechartsTooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-[#0F241A] text-white p-4 rounded-xl shadow-lg border border-emerald-900/40 font-mono text-xs space-y-1.5">
+                              <p className="font-bold text-[10px] text-emerald-400 uppercase tracking-wider">{payload[0].payload.day}</p>
+                              <p className="flex justify-between gap-6">
+                                <span className="opacity-70">Processed:</span>
+                                <span className="font-bold">{formatINR(payload[0].value as number)}</span>
+                              </p>
+                              <p className="flex justify-between gap-6">
+                                <span className="opacity-70">Pending/Overdue:</span>
+                                <span className="font-bold text-[#B8E020]">{formatINR(payload[1].value as number)}</span>
+                              </p>
+                            </div>
+                          )
+                        }
+                        return null
                       }}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="amount" 
-                      stroke="var(--accent)" 
-                      strokeWidth={2} 
-                      fillOpacity={1} 
-                      fill="url(#chartGradient)" 
+                    <RechartsBar 
+                      dataKey="processed" 
+                      fill="#1B4332" 
+                      radius={[4, 4, 0, 0]} 
+                      maxBarSize={30}
                     />
-                  </AreaChart>
-                </ResponsiveContainer>
+                    <RechartsBar 
+                      dataKey="pendingOverdue" 
+                      fill="#B8E020" 
+                      radius={[4, 4, 0, 0]} 
+                      maxBarSize={30}
+                    />
+                  </RechartsBarChart>
+                </RechartsResponsiveContainer>
               </div>
             </section>
 
@@ -387,129 +340,43 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Calendar Grid (Column 1 & 2) */}
-              <div className="lg:col-span-2 bg-[var(--card-bg)] border border-[var(--border)] p-4 rounded-lg space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-sm">Invoice Tracking Calendar</h3>
-                    <p className="text-xs text-[var(--muted)]">Activity-based mapping & day selection filter</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={handlePrevMonth}
-                      className="interactive-el p-1.5 rounded hover:bg-[var(--hover)] border border-[var(--border)] cursor-pointer"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <span className="text-xs font-mono font-medium min-w-[80px] text-center">
-                      {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                    </span>
-                    <button 
-                      onClick={handleNextMonth}
-                      className="interactive-el p-1.5 rounded hover:bg-[var(--hover)] border border-[var(--border)] cursor-pointer"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Calendar Layout */}
-                <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-[var(--muted)] font-medium uppercase tracking-wider">
-                  <div>Sun</div>
-                  <div>Mon</div>
-                  <div>Tue</div>
-                  <div>Wed</div>
-                  <div>Thu</div>
-                  <div>Fri</div>
-                  <div>Sat</div>
-                </div>
-
-                <div className="grid grid-cols-7 gap-1.5">
-                  {calendarCells.map((cell, idx) => {
-                    if (!cell) return <div key={`empty-${idx}`} className="h-10"></div>
-                    
-                    // Intensity color coding (GitHub-like intensity scale using accent shades)
-                    let intensityStyle = {}
-                    if (cell.invoiceCount === 1) {
-                      intensityStyle = { backgroundColor: 'rgba(var(--accent-rgb), 0.15)', color: 'var(--foreground)' }
-                    } else if (cell.invoiceCount === 2) {
-                      intensityStyle = { backgroundColor: 'rgba(var(--accent-rgb), 0.35)', color: 'var(--foreground)' }
-                    } else if (cell.invoiceCount > 2) {
-                      intensityStyle = { backgroundColor: 'rgba(var(--accent-rgb), 0.7)', color: '#fff' }
-                    } else {
-                      // Quiet day
-                      intensityStyle = { border: '1px solid var(--border)', color: 'var(--muted)' }
-                    }
-
-                    const isSelected = selectedDate === cell.dateString
-
-                    return (
-                      <button
-                        key={cell.dateString}
-                        onClick={() => setSelectedDate(isSelected ? null : cell.dateString)}
-                        style={intensityStyle}
-                        className={`interactive-el h-10 rounded-md relative flex flex-col items-center justify-center transition-all cursor-pointer ${
-                          isSelected ? 'ring-2 ring-[var(--accent)] border-transparent' : ''
-                        }`}
-                      >
-                        <span className={`font-mono text-xs ${cell.isToday ? 'text-[var(--accent)] font-bold' : ''}`}>
-                          {cell.dayNumber}
-                        </span>
-                        {cell.invoiceCount > 0 && (
-                          <span className="absolute bottom-1 w-1 h-1 bg-[var(--accent)] rounded-full"></span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Legend & Clears */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-2 text-[11px] text-[var(--muted)] border-t border-[var(--border)]">
-                  <div className="flex items-center gap-1.5">
-                    <span>Fewer</span>
-                    <span className="w-3.5 h-3.5 rounded border border-[var(--border)]"></span>
-                    <span className="w-3.5 h-3.5 rounded" style={{ backgroundColor: 'rgba(var(--accent-rgb), 0.15)' }}></span>
-                    <span className="w-3.5 h-3.5 rounded" style={{ backgroundColor: 'rgba(var(--accent-rgb), 0.35)' }}></span>
-                    <span className="w-3.5 h-3.5 rounded" style={{ backgroundColor: 'rgba(var(--accent-rgb), 0.7)' }}></span>
-                    <span>More</span>
-                  </div>
-
-                  {selectedDate && (
-                    <button 
-                      onClick={() => setSelectedDate(null)}
-                      className="interactive-el text-[var(--accent)] hover:underline font-mono"
-                    >
-                      Clear Date Filter [ {selectedDate} ]
-                    </button>
-                  )}
-                </div>
+              <div className="lg:col-span-2">
+                <CalendarHeatmap 
+                  currentMonth={currentMonth}
+                  selectedDate={selectedDate}
+                  calendarCells={calendarCells}
+                  handlePrevMonth={handlePrevMonth}
+                  handleNextMonth={handleNextMonth}
+                  setSelectedDate={setSelectedDate}
+                />
               </div>
 
               {/* Needs Attention Panel (Column 3) */}
-              <div className="bg-[var(--card-bg)] border border-[var(--border)] p-4 rounded-lg space-y-4">
+              <div className="bg-card text-card-foreground border border-border/60 p-6 rounded-[24px] shadow-sm space-y-4 transition-all duration-200 hover:shadow-md">
                 <div>
-                  <h3 className="font-semibold text-sm">Needs Attention</h3>
-                  <p className="text-xs text-[var(--muted)]">Overdue and pending ledger approval items</p>
+                  <h3 className="font-bold text-sm">Needs Attention</h3>
+                  <p className="text-xs text-muted-foreground">Overdue and pending ledger approval items</p>
                 </div>
                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                   {MOCK_INVOICES.filter(inv => inv.status === 'overdue' || inv.status === 'pending').map(inv => (
                     <div 
                       key={inv.id}
-                      className="border border-[var(--border)] p-2.5 rounded-lg flex items-center justify-between text-xs"
+                      className="border border-border/60 bg-card p-3.5 rounded-xl flex items-center justify-between text-xs transition-all hover:border-border"
                     >
                       <div className="space-y-1">
-                        <div className="font-semibold text-[var(--foreground)]">{inv.vendor}</div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-[var(--muted)]">
+                        <div className="font-bold text-foreground">{inv.vendor}</div>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-semibold">
                           <span className="font-mono">{inv.id}</span>
                           <span>•</span>
                           <span className="font-mono">{inv.date}</span>
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <div className="font-mono font-semibold">{formatINR(convertToINR(inv))}</div>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
+                        <div className="font-mono font-bold text-foreground">{formatINR(convertToINR(inv))}</div>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                           inv.status === 'overdue' 
-                            ? 'bg-[var(--status-overdue-bg)] text-[var(--status-overdue)]'
-                            : 'bg-[var(--status-pending-bg)] text-[var(--status-pending)]'
+                            ? 'bg-red-500/10 text-red-650'
+                            : 'bg-amber-500/10 text-amber-600'
                         }`}>
                           {inv.status}
                         </span>
@@ -521,40 +388,40 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
             </div>
 
             {/* Invoices Table View */}
-            <section className="bg-[var(--card-bg)] border border-[var(--border)] rounded-lg overflow-hidden">
-              <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+            <section className="bg-card text-card-foreground border border-border/60 rounded-[24px] shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md">
+              <div className="p-6 border-b border-border/60 flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold text-sm">
+                  <h3 className="font-bold text-sm">
                     {selectedDate ? `Invoices Received on ${selectedDate}` : 'Recent Mapped Communications'}
                   </h3>
-                  <p className="text-xs text-[var(--muted)]">Extracted metadata and structured transactional mapping</p>
+                  <p className="text-xs text-muted-foreground">Extracted metadata and structured transactional mapping</p>
                 </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-[var(--border)] text-[10px] text-[var(--muted)] uppercase tracking-wider font-semibold">
-                      <th className="p-4">Invoice ID</th>
-                      <th className="p-4">Vendor</th>
-                      <th className="p-4">Date</th>
-                      <th className="p-4">Ledger Mappings</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4 text-right">Amount (INR)</th>
+                    <tr className="border-b border-border/60 text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
+                      <th className="p-5">Invoice ID</th>
+                      <th className="p-5">Vendor</th>
+                      <th className="p-5">Date</th>
+                      <th className="p-5">Ledger Mappings</th>
+                      <th className="p-5">Status</th>
+                      <th className="p-5 text-right">Amount (INR)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--border)] text-xs">
+                  <tbody className="divide-y divide-border/60 text-xs font-medium">
                     {filteredInvoices.slice(0, 10).map(inv => (
-                      <tr key={inv.id} className="hover:bg-[var(--hover)] transition-colors">
-                        <td className="p-4 font-mono text-[var(--muted)]">{inv.id}</td>
-                        <td className="p-4 font-semibold text-[var(--foreground)]">{inv.vendor}</td>
-                        <td className="p-4 font-mono">{inv.date}</td>
-                        <td className="p-4">
+                      <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="p-5 font-mono text-muted-foreground font-semibold">{inv.id}</td>
+                        <td className="p-5 font-bold text-foreground">{inv.vendor}</td>
+                        <td className="p-5 font-mono">{inv.date}</td>
+                        <td className="p-5">
                           <div className="flex flex-col gap-0.5">
-                            <span className="font-mono font-medium text-[var(--foreground)]">{inv.ledgerCode}</span>
-                            <div className="flex items-center gap-1 text-[10px] text-[var(--muted)]">
+                            <span className="font-mono font-bold text-foreground">{inv.ledgerCode}</span>
+                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                               <span>{inv.ledgerName}</span>
-                              {isUnclassified(inv) && (
-                                <span className="flex items-center gap-0.5 text-[var(--status-pending)] font-mono font-semibold bg-[var(--status-pending-bg)] px-1 rounded">
+                              {inv.confidence < 80 && (
+                                <span className="flex items-center gap-0.5 text-amber-600 font-mono font-bold bg-amber-500/10 px-1.5 py-0.2 rounded-full">
                                   <AlertTriangle className="w-3 h-3" />
                                   <span>Unclassified ({inv.confidence}%)</span>
                                 </span>
@@ -562,16 +429,20 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
                             </div>
                           </div>
                         </td>
-                        <td className="p-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
-                            inv.status === 'paid' ? 'bg-[var(--status-paid-bg)] text-[var(--status-paid)]' :
-                            inv.status === 'pending' ? 'bg-[var(--status-pending-bg)] text-[var(--status-pending)]' :
-                            'bg-[var(--status-overdue-bg)] text-[var(--status-overdue)]'
+                        <td className="p-5">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-800' :
+                            inv.status === 'pending' ? 'bg-amber-500/10 text-amber-800' :
+                            'bg-red-500/10 text-red-800'
                           }`}>
                             {inv.status}
                           </span>
                         </td>
-                        <td className="p-4 font-mono font-semibold text-right">{formatINR(convertToINR(inv))}</td>
+                        <td className={`p-5 font-mono font-bold text-right ${
+                          inv.status === 'paid' ? 'text-emerald-700' :
+                          inv.status === 'pending' ? 'text-amber-600' :
+                          'text-red-650'
+                        }`}>{formatINR(convertToINR(inv))}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -580,154 +451,6 @@ export const Dashboard = ({ onViewAllInvoices }: DashboardProps) => {
             </section>
           </>
         )}
-
-        {/* --- Tab: Invoices --- */}
-        {activeTab === 'invoices' && (
-          <section className="bg-[var(--card-bg)] border border-[var(--border)] rounded-lg overflow-hidden">
-            <div className="p-4 border-b border-[var(--border)]">
-              <h3 className="font-semibold text-sm">All Invoices</h3>
-              <p className="text-xs text-[var(--muted)]">Complete ledger of structured financial records</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[var(--border)] text-[10px] text-[var(--muted)] uppercase tracking-wider font-semibold">
-                    <th className="p-4">Invoice ID</th>
-                    <th className="p-4">Vendor</th>
-                    <th className="p-4">Date</th>
-                    <th className="p-4">Ledger Code</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Amount (INR)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)] text-xs">
-                  {MOCK_INVOICES.map(inv => (
-                    <tr key={inv.id} className="hover:bg-[var(--hover)] transition-colors">
-                      <td className="p-4 font-mono text-[var(--muted)]">{inv.id}</td>
-                      <td className="p-4 font-semibold text-[var(--foreground)]">{inv.vendor}</td>
-                      <td className="p-4 font-mono">{inv.date}</td>
-                      <td className="p-4 font-mono">{inv.ledgerCode}</td>
-                      <td className="p-4">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
-                          inv.status === 'paid' ? 'bg-[var(--status-paid-bg)] text-[var(--status-paid)]' :
-                          inv.status === 'pending' ? 'bg-[var(--status-pending-bg)] text-[var(--status-pending)]' :
-                          'bg-[var(--status-overdue-bg)] text-[var(--status-overdue)]'
-                        }`}>
-                          {inv.status}
-                        </span>
-                      </td>
-                      <td className="p-4 font-mono font-semibold text-right">{formatINR(convertToINR(inv))}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {/* --- Tab: Calendar View --- */}
-        {activeTab === 'calendar' && (
-          <section className="bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-lg space-y-6 max-w-4xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-sm">Monthly Communication Schedule</h3>
-                <p className="text-xs text-[var(--muted)]">Visual intensity index of incoming document transactions</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={handlePrevMonth} className="interactive-el p-1.5 rounded hover:bg-[var(--hover)] border border-[var(--border)] cursor-pointer">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <span className="text-xs font-mono font-medium min-w-[80px] text-center">
-                  {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                </span>
-                <button onClick={handleNextMonth} className="interactive-el p-1.5 rounded hover:bg-[var(--hover)] border border-[var(--border)] cursor-pointer">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-2 text-center text-xs text-[var(--muted)] font-medium uppercase tracking-wider">
-              <div>Sun</div>
-              <div>Mon</div>
-              <div>Tue</div>
-              <div>Wed</div>
-              <div>Thu</div>
-              <div>Fri</div>
-              <div>Sat</div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-2.5">
-              {calendarCells.map((cell, idx) => {
-                if (!cell) return <div key={`empty-full-${idx}`} className="h-16"></div>
-
-                let intensityStyle = {}
-                if (cell.invoiceCount === 1) {
-                  intensityStyle = { backgroundColor: 'rgba(var(--accent-rgb), 0.15)', color: 'var(--foreground)' }
-                } else if (cell.invoiceCount === 2) {
-                  intensityStyle = { backgroundColor: 'rgba(var(--accent-rgb), 0.35)', color: 'var(--foreground)' }
-                } else if (cell.invoiceCount > 2) {
-                  intensityStyle = { backgroundColor: 'rgba(var(--accent-rgb), 0.7)', color: '#fff' }
-                } else {
-                  intensityStyle = { border: '1px solid var(--border)', color: 'var(--muted)' }
-                }
-
-                const isSelected = selectedDate === cell.dateString
-
-                return (
-                  <button
-                    key={`full-${cell.dateString}`}
-                    onClick={() => {
-                      setSelectedDate(isSelected ? null : cell.dateString)
-                      setActiveTab('overview')
-                    }}
-                    style={intensityStyle}
-                    className={`interactive-el h-16 rounded-lg relative flex flex-col items-center justify-between p-2 transition-all cursor-pointer ${
-                      isSelected ? 'ring-2 ring-[var(--accent)] border-transparent' : ''
-                    }`}
-                  >
-                    <span className={`font-mono text-xs self-start ${cell.isToday ? 'text-[var(--accent)] font-bold' : ''}`}>
-                      {cell.dayNumber}
-                    </span>
-                    {cell.invoiceCount > 0 && (
-                      <span className="font-mono text-[10px] font-bold self-end bg-black/10 dark:bg-white/10 px-1 rounded">
-                        {cell.invoiceCount}
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* --- Tab: Ledger --- */}
-        {activeTab === 'ledger' && (
-          <section className="bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-lg space-y-6">
-            <div>
-              <h3 className="font-semibold text-sm">Chart of Accounts Mapping Matrix</h3>
-              <p className="text-xs text-[var(--muted)]">Rule-based category classification list</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-              <div className="border border-[var(--border)] p-4 rounded-lg space-y-3">
-                <h4 className="font-semibold text-[var(--foreground)] border-b border-[var(--border)] pb-2 mb-2">Expense Ledgers</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between"><span className="font-mono text-[var(--muted)]">ASP-28</span><span>Softwares, Laptop Rental</span></div>
-                  <div className="flex justify-between"><span className="font-mono text-[var(--muted)]">ASP-59</span><span>Travelling & Conveyance</span></div>
-                  <div className="flex justify-between"><span className="font-mono text-[var(--muted)]">ASP-33</span><span>Professional & Legal Expense</span></div>
-                  <div className="flex justify-between"><span className="font-mono text-[var(--muted)]">SISU-61</span><span>Rent for Office Space</span></div>
-                </div>
-              </div>
-              <div className="border border-[var(--border)] p-4 rounded-lg space-y-3">
-                <h4 className="font-semibold text-[var(--foreground)] border-b border-[var(--border)] pb-2 mb-2">Income Ledgers</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between"><span className="font-mono text-[var(--muted)]">ARC-02</span><span>Management Consulting Service</span></div>
-                  <div className="flex justify-between"><span className="font-mono text-[var(--muted)]">SUBSCRIPTION</span><span>Subscription Income</span></div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
       </main>
     </div>
   )
