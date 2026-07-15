@@ -181,12 +181,12 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
       </div>
 
       {/* Summary Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 text-[var(--card-foreground)]">
         
         {/* Card 1: Income (Sent) */}
-        <div className="bg-white border border-[var(--border)] p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[140px] transition-all hover:shadow-md">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all">
           <div className="flex justify-between items-start">
-            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Total Billing (Sent)' : 'Income (Sent)'}
             </span>
             <span className="p-1.5 rounded-xl flex items-center justify-center bg-[var(--chip-green-bg)] text-[var(--chip-green-fg)]">
@@ -194,21 +194,21 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             </span>
           </div>
           <div className="mt-2">
-            <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] font-mono leading-none">
+            <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.totalSent)}
             </h3>
-            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
-              Collected: <span className="text-emerald-600">{formatINR(metrics.totalCollected)}</span>
+            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
+              Collected: <span className="text-emerald-700">{formatINR(metrics.totalCollected)}</span>
             </p>
           </div>
         </div>
 
         {/* Card 2: Outstanding Receivables */}
-        <div className={`p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[140px] transition-all hover:shadow-md border ${
-          metrics.outstandingReceivable > 0 ? 'border-amber-200 bg-amber-50/10' : 'bg-white border-[var(--border)]'
+        <div className={`p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all border ${
+          metrics.outstandingReceivable > 0 ? 'border-amber-400 bg-amber-50' : 'bg-[var(--bg-card)] border-[var(--border)]'
         }`}>
           <div className="flex justify-between items-start">
-            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Accounts Receivable' : 'Money Owed To Me'}
             </span>
             <span className="p-1.5 rounded-xl flex items-center justify-center bg-[var(--chip-peach-bg)] text-[var(--chip-peach-fg)]">
@@ -216,19 +216,19 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             </span>
           </div>
           <div className="mt-2">
-            <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] font-mono leading-none">
+            <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.outstandingReceivable)}
             </h3>
-            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
+            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
               Outstanding client payments
             </p>
           </div>
         </div>
 
         {/* Card 3: Expense (Received) */}
-        <div className="bg-white border border-[var(--border)] p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[140px] transition-all hover:shadow-md">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all">
           <div className="flex justify-between items-start">
-            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Total Expenses (Received)' : 'Expense (Received)'}
             </span>
             <span className="p-1.5 rounded-xl flex items-center justify-center bg-[var(--chip-blue-bg)] text-[var(--chip-blue-fg)]">
@@ -236,32 +236,32 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             </span>
           </div>
           <div className="mt-2">
-            <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] font-mono leading-none">
+            <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.totalReceived)}
             </h3>
-            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
-              Paid: <span className="text-blue-600">{formatINR(metrics.totalPaidOut)}</span>
+            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
+              Paid: <span className="text-blue-700">{formatINR(metrics.totalPaidOut)}</span>
             </p>
           </div>
         </div>
 
         {/* Card 4: Outstanding Payables */}
-        <div className={`p-5 rounded-[var(--radius-lg)] shadow-sm flex flex-col justify-between min-h-[140px] transition-all hover:shadow-md border ${
-          metrics.outstandingPayable > 0 ? 'border-red-200 bg-red-50/10' : 'bg-white border-[var(--border)]'
+        <div className={`p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all border ${
+          metrics.outstandingPayable > 0 ? 'border-red-300 bg-red-50' : 'bg-[var(--bg-card)] border-[var(--border)]'
         }`}>
           <div className="flex justify-between items-start">
-            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Accounts Payable' : 'Money I Owe'}
             </span>
-            <span className="p-1.5 rounded-xl flex items-center justify-center bg-red-50 text-red-500">
+            <span className="p-1.5 rounded-xl flex items-center justify-center bg-red-100 text-red-700">
               <AlertTriangle className="w-3.5 h-3.5" />
             </span>
           </div>
           <div className="mt-2">
-            <h3 className="text-xl font-black tracking-tight text-[var(--text-primary)] font-mono leading-none">
+            <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.outstandingPayable)}
             </h3>
-            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
+            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
               Pending supplier invoices
             </p>
           </div>
@@ -270,16 +270,16 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
       </div>
 
       {/* Money Flow Chart */}
-      <div className="bg-white border border-[var(--border)] p-6 rounded-[var(--radius-lg)] shadow-sm">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[var(--radius-lg)] text-[var(--card-foreground)]">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="font-extrabold text-sm text-[var(--text-primary)]">Income vs Expense Flow</h3>
-            <p className="text-[10px] text-[var(--text-secondary)] font-medium">Monthly cash flow tracker (paid items)</p>
+            <h3 className="font-extrabold text-sm text-[var(--card-foreground)]">Income vs Expense Flow</h3>
+            <p className="text-[10px] text-[#5C6479] font-medium">Monthly cash flow tracker (paid items)</p>
           </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setTimePeriod(timePeriod === 'Weekly' ? 'Monthly' : 'Weekly')}
-              className="flex items-center gap-1.5 px-3 py-1 border border-[var(--border)] rounded-full text-[9px] font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-white cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1 border border-[var(--border)] rounded-full text-[9px] font-bold text-[#5C6479] hover:text-[var(--card-foreground)] bg-[var(--bg-card)] cursor-pointer"
             >
               <span>{timePeriod}</span>
               <ChevronDown className="w-3 h-3" />
@@ -317,18 +317,18 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
       </div>
 
       {/* Side-by-Side Direction Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-[var(--card-foreground)]">
         
         {/* Panel 1: Invoices I've Sent */}
-        <div className="bg-white border border-[var(--border)] p-6 rounded-[var(--radius-lg)] shadow-sm space-y-4">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[var(--radius-lg)] space-y-4">
           <div className="border-b border-[var(--border)] pb-3 flex justify-between items-center">
             <div>
-              <h3 className="font-extrabold text-sm text-[var(--text-primary)]">Invoices I've Sent</h3>
-              <p className="text-[10px] text-[var(--text-secondary)] font-medium">Billed client totals and collections</p>
+              <h3 className="font-extrabold text-sm text-[var(--card-foreground)]">Invoices I've Sent</h3>
+              <p className="text-[10px] text-[#5C6479] font-medium">Billed client totals and collections</p>
             </div>
             <button 
               onClick={onViewAllInvoices}
-              className="text-[10px] text-[var(--text-secondary)] font-extrabold hover:text-[var(--text-primary)] flex items-center gap-0.5 cursor-pointer bg-transparent border-none"
+              className="text-[10px] text-[#5C6479] font-extrabold hover:text-[var(--card-foreground)] flex items-center gap-0.5 cursor-pointer bg-transparent border-none"
             >
               <span>View all</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -339,25 +339,25 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             {counterpartiesData.outgoing.map(client => {
               const isExpanded = !!expandedCounterparties[client.name]
               return (
-                <div key={client.name} className="border border-[var(--border)] rounded-xl overflow-hidden">
+                <div key={client.name} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white/40">
                   <div 
                     onClick={() => toggleCounterparty(client.name)}
-                    className="p-3 bg-[var(--bg-page)]/20 hover:bg-[var(--bg-page)]/40 cursor-pointer flex items-center justify-between text-xs font-semibold"
+                    className="p-3 hover:bg-white/60 cursor-pointer flex items-center justify-between text-xs font-semibold"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="w-8 h-8 rounded-lg bg-[var(--chip-green-bg)] text-[var(--chip-green-fg)] flex items-center justify-center flex-shrink-0 font-bold">
                         {client.name.charAt(0)}
                       </span>
                       <div className="min-w-0">
-                        <div className="font-bold text-[var(--text-primary)] truncate">{client.name}</div>
-                        <div className="text-[9px] text-[var(--text-secondary)] mt-0.5">{client.count} invoices</div>
+                        <div className="font-bold text-[var(--card-foreground)] truncate">{client.name}</div>
+                        <div className="text-[9px] text-[#5C6479] mt-0.5">{client.count} invoices</div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="font-mono font-bold">{formatINR(client.totalAmount)}</div>
-                        <div className="text-[9px] text-emerald-600 font-bold font-mono">Coll: {formatINR(client.settledAmount)}</div>
+                        <div className="font-mono font-bold text-[var(--card-foreground)]">{formatINR(client.totalAmount)}</div>
+                        <div className="text-[9px] text-emerald-700 font-bold font-mono">Coll: {formatINR(client.settledAmount)}</div>
                       </div>
                       
                       <span className={`px-2 py-0.5 rounded-[var(--radius-pill)] text-[9px] font-bold ${
@@ -367,21 +367,21 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
                       }`}>
                         {client.statusText}
                       </span>
-                      {isExpanded ? <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />}
+                      {isExpanded ? <ChevronDown className="w-4 h-4 text-[#5C6479]" /> : <ChevronRight className="w-4 h-4 text-[#5C6479]" />}
                     </div>
                   </div>
 
                   {/* Expanded individual invoice rows */}
                   {isExpanded && (
-                    <div className="p-3 bg-white divide-y divide-[var(--border)] border-t border-[var(--border)]">
+                    <div className="p-3 bg-white/80 divide-y divide-[var(--border)] border-t border-[var(--border)]">
                       {client.invoicesList.map(inv => (
                         <div key={inv.id} className="py-2 flex items-center justify-between text-[10px]">
                           <div>
-                            <div className="font-bold text-[var(--text-primary)]">Inv #{inv.invoice_number || '—'}</div>
-                            <div className="text-[9px] text-[var(--text-secondary)]">Due: {inv.due_date}</div>
+                            <div className="font-bold text-[var(--card-foreground)]">Inv #{inv.invoice_number || '—'}</div>
+                            <div className="text-[9px] text-[#5C6479]">Due: {inv.due_date}</div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="font-mono font-bold text-[var(--text-primary)]">{formatINR(getAmountINR(inv))}</span>
+                            <span className="font-mono font-bold text-[var(--card-foreground)]">{formatINR(getAmountINR(inv))}</span>
                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase ${
                               inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-800' : 'bg-amber-500/10 text-amber-800'
                             }`}>
@@ -397,7 +397,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             })}
 
             {counterpartiesData.outgoing.length === 0 && (
-              <div className="text-center py-8 text-[var(--text-secondary)] text-xs">
+              <div className="text-center py-8 text-[#5C6479] text-xs">
                 No sent invoices detected.
               </div>
             )}
@@ -405,15 +405,15 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
         </div>
 
         {/* Panel 2: Invoices I've Received */}
-        <div className="bg-white border border-[var(--border)] p-6 rounded-[var(--radius-lg)] shadow-sm space-y-4">
+        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-[var(--radius-lg)] space-y-4">
           <div className="border-b border-[var(--border)] pb-3 flex justify-between items-center">
             <div>
-              <h3 className="font-extrabold text-sm text-[var(--text-primary)]">Invoices I've Received</h3>
-              <p className="text-[10px] text-[var(--text-secondary)] font-medium">Vendor bill totals and payouts</p>
+              <h3 className="font-extrabold text-sm text-[var(--card-foreground)]">Invoices I've Received</h3>
+              <p className="text-[10px] text-[#5C6479] font-medium">Vendor bill totals and payouts</p>
             </div>
             <button 
               onClick={onViewAllInvoices}
-              className="text-[10px] text-[var(--text-secondary)] font-extrabold hover:text-[var(--text-primary)] flex items-center gap-0.5 cursor-pointer bg-transparent border-none"
+              className="text-[10px] text-[#5C6479] font-extrabold hover:text-[var(--card-foreground)] flex items-center gap-0.5 cursor-pointer bg-transparent border-none"
             >
               <span>View all</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -424,25 +424,25 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             {counterpartiesData.incoming.map(vendor => {
               const isExpanded = !!expandedCounterparties[vendor.name]
               return (
-                <div key={vendor.name} className="border border-[var(--border)] rounded-xl overflow-hidden">
+                <div key={vendor.name} className="border border-[var(--border)] rounded-xl overflow-hidden bg-white/40">
                   <div 
                     onClick={() => toggleCounterparty(vendor.name)}
-                    className="p-3 bg-[var(--bg-page)]/20 hover:bg-[var(--bg-page)]/40 cursor-pointer flex items-center justify-between text-xs font-semibold"
+                    className="p-3 hover:bg-white/60 cursor-pointer flex items-center justify-between text-xs font-semibold"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="w-8 h-8 rounded-lg bg-[var(--chip-blue-bg)] text-[var(--chip-blue-fg)] flex items-center justify-center flex-shrink-0 font-bold">
                         {vendor.name.charAt(0)}
                       </span>
                       <div className="min-w-0">
-                        <div className="font-bold text-[var(--text-primary)] truncate">{vendor.name}</div>
-                        <div className="text-[9px] text-[var(--text-secondary)] mt-0.5">{vendor.count} invoices</div>
+                        <div className="font-bold text-[var(--card-foreground)] truncate">{vendor.name}</div>
+                        <div className="text-[9px] text-[#5C6479] mt-0.5">{vendor.count} invoices</div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="font-mono font-bold">{formatINR(vendor.totalAmount)}</div>
-                        <div className="text-[9px] text-blue-600 font-bold font-mono">Paid: {formatINR(vendor.settledAmount)}</div>
+                        <div className="font-mono font-bold text-[var(--card-foreground)]">{formatINR(vendor.totalAmount)}</div>
+                        <div className="text-[9px] text-blue-700 font-bold font-mono">Paid: {formatINR(vendor.settledAmount)}</div>
                       </div>
                       
                       <span className={`px-2 py-0.5 rounded-[var(--radius-pill)] text-[9px] font-bold ${
@@ -452,21 +452,21 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
                       }`}>
                         {vendor.statusText}
                       </span>
-                      {isExpanded ? <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" /> : <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />}
+                      {isExpanded ? <ChevronDown className="w-4 h-4 text-[#5C6479]" /> : <ChevronRight className="w-4 h-4 text-[#5C6479]" />}
                     </div>
                   </div>
 
                   {/* Expanded individual invoice rows */}
                   {isExpanded && (
-                    <div className="p-3 bg-white divide-y divide-[var(--border)] border-t border-[var(--border)]">
+                    <div className="p-3 bg-white/80 divide-y divide-[var(--border)] border-t border-[var(--border)]">
                       {vendor.invoicesList.map(inv => (
                         <div key={inv.id} className="py-2 flex items-center justify-between text-[10px]">
                           <div>
-                            <div className="font-bold text-[var(--text-primary)]">Inv #{inv.invoice_number || '—'}</div>
-                            <div className="text-[9px] text-[var(--text-secondary)]">Due: {inv.due_date}</div>
+                            <div className="font-bold text-[var(--card-foreground)]">Inv #{inv.invoice_number || '—'}</div>
+                            <div className="text-[9px] text-[#5C6479]">Due: {inv.due_date}</div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="font-mono font-bold text-[var(--text-primary)]">{formatINR(getAmountINR(inv))}</span>
+                            <span className="font-mono font-bold text-[var(--card-foreground)]">{formatINR(getAmountINR(inv))}</span>
                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase ${
                               inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-800' : 'bg-amber-500/10 text-amber-800'
                             }`}>
@@ -482,7 +482,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             })}
 
             {counterpartiesData.incoming.length === 0 && (
-              <div className="text-center py-8 text-[var(--text-secondary)] text-xs">
+              <div className="text-center py-8 text-[#5C6479] text-xs">
                 No received invoices detected.
               </div>
             )}

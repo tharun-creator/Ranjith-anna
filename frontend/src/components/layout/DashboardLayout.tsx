@@ -158,7 +158,7 @@ export const DashboardLayout = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="h-20 flex items-center justify-between px-6 sm:px-8 bg-white sticky top-0 z-30 border-b border-[var(--border)] shadow-sm">
+        <header className="h-20 flex items-center justify-between px-6 sm:px-8 bg-[var(--bg-sidebar)] sticky top-0 z-30 border-b border-[var(--border)]">
           <div className="flex items-center flex-1">
             <button 
               onClick={() => setMobileOpen(!mobileOpen)}

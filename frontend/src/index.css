@@ -36,62 +36,62 @@
 @layer base {
   :root {
     /* Base layouts */
-    --background: #F3F3EF;          /* warm off-white page background */
-    --foreground: #14141F;          /* near-black navy */
+    --background: #1A1F36;          /* Midnight Blue page background */
+    --foreground: #E0E2E7;          /* Light Silver foreground */
     
-    --card: #FFFFFF;
-    --card-foreground: #14141F;
+    --card: #E0E2E7;                /* Light Silver card background */
+    --card-foreground: #1A1F36;     /* Midnight Blue text inside card */
     
-    --popover: #FFFFFF;
-    --popover-foreground: #14141F;
+    --popover: #1A1F36;
+    --popover-foreground: #E0E2E7;
 
-    --primary: #14141F;
-    --primary-foreground: #CFFF4D;
+    --primary: #00C853;             /* Electric Green */
+    --primary-foreground: #1A1F36;
 
-    --secondary: #CFFF4D;
-    --secondary-foreground: #14141F;
+    --secondary: #252D4A;           /* A medium-dark blue for buttons/active elements */
+    --secondary-foreground: #E0E2E7;
 
-    --muted: #EAEAEE;
-    --muted-foreground: #8A8A94;
+    --muted: #2E354F;               /* Subtle UI border/placeholder color */
+    --muted-foreground: #A0A5B5;
 
-    --accent: #CFFF4D;
-    --accent-foreground: #14141F;
+    --accent: #00C853;              /* Electric Green */
+    --accent-foreground: #1A1F36;
 
     --destructive: #E1443D;
     --destructive-foreground: #FFFFFF;
 
-    --border: #E5E5EB;
-    --input: #E5E5EB;
-    --ring: #14141F;
+    --border: #2E354F;
+    --input: #2E354F;
+    --ring: #00C853;
 
     /* Visual Redesign Token Specs */
-    --bg-page: #F3F3EF;
-    --bg-card: #FFFFFF;
-    --bg-sidebar: #14141F;
-    --bg-sidebar-hover: #1F1F2E;
+    --bg-page: #1A1F36;             /* Midnight Blue */
+    --bg-card: #E0E2E7;             /* Light Silver */
+    --bg-sidebar: #131625;          /* Extra Dark Midnight Blue */
+    --bg-sidebar-hover: #1A1F36;
 
-    --accent-lime: #CFFF4D;
-    --accent-lime-text: #14141F;
+    --accent-lime: #00C853;         /* Electric Green */
+    --accent-lime-text: #1A1F36;
 
-    --text-primary: #14141F;
-    --text-secondary: #8A8A94;
+    --text-primary: #E0E2E7;        /* Light Silver */
+    --text-secondary: #A0A5B5;      /* Secondary silver text */
     --text-on-dark: #FFFFFF;
-    --text-on-dark-secondary: #9A9AA8;
+    --text-on-dark-secondary: #A0A5B5;
 
     /* Status Colors */
-    --status-paid-bg: #E4F9E9;    --status-paid-text: #1E9E4A;
-    --status-pending-bg: #FFF4E0; --status-pending-text: #B9770E;
-    --status-overdue-bg: #FDEAEA; --status-overdue-text: #E1443D;
+    --status-paid-bg: #00C853;    --status-paid-text: #FFFFFF;
+    --status-pending-bg: #E28743; --status-pending-text: #FFFFFF;
+    --status-overdue-bg: #E1443D; --status-overdue-text: #FFFFFF;
 
-    /* Category soft tints */
-    --chip-purple-bg: #EDE7FB; --chip-purple-fg: #6F4FE0;
-    --chip-green-bg:  #E4F9EE; --chip-green-fg:  #1E9E6B;
-    --chip-peach-bg:  #FCEDE4; --chip-peach-fg:  #D9722F;
-    --chip-blue-bg:   #E7F1FC; --chip-blue-fg:   #2E7FD9;
+    /* Category soft tints (flat, solid, dark backgrounds for contrast) */
+    --chip-purple-bg: #2C2440; --chip-purple-fg: #9D7EF5;
+    --chip-green-bg:  #163522; --chip-green-fg:  #34D399;
+    --chip-peach-bg:  #38241D; --chip-peach-fg:  #F59E0B;
+    --chip-blue-bg:   #1E2C3C; --chip-blue-fg:   #60A5FA;
 
-    --shadow-card: 0 1px 2px rgba(20,20,31,0.04), 0 8px 24px rgba(20,20,31,0.05);
-    --radius-lg: 20px;
-    --radius-md: 14px;
+    --shadow-card: none;            /* flat design - no shadows */
+    --radius-lg: 12px;              /* modern flat rounded corners */
+    --radius-md: 8px;
     --radius-pill: 999px;
   }
 }
