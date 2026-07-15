@@ -35,63 +35,119 @@
 
 @layer base {
   :root {
-    /* Base layouts */
-    --background: #1A1F36;          /* Midnight Blue page background */
-    --foreground: #E0E2E7;          /* Light Silver foreground */
+    /* Vercel Light Theme */
+    --background: #FAFAFA;          /* Geist light page background */
+    --foreground: #000000;          /* Pure black text */
     
-    --card: #E0E2E7;                /* Light Silver card background */
-    --card-foreground: #1A1F36;     /* Midnight Blue text inside card */
+    --card: #FFFFFF;                /* Crisp white card backgrounds */
+    --card-foreground: #000000;     /* Pure black card text */
     
-    --popover: #1A1F36;
-    --popover-foreground: #E0E2E7;
+    --popover: #FFFFFF;
+    --popover-foreground: #000000;
 
-    --primary: #00C853;             /* Electric Green */
-    --primary-foreground: #1A1F36;
+    --primary: #000000;             /* Solid black Vercel buttons */
+    --primary-foreground: #FFFFFF;
 
-    --secondary: #252D4A;           /* A medium-dark blue for buttons/active elements */
-    --secondary-foreground: #E0E2E7;
+    --secondary: #FAFAFA;           /* Light silver buttons */
+    --secondary-foreground: #000000;
 
-    --muted: #2E354F;               /* Subtle UI border/placeholder color */
-    --muted-foreground: #A0A5B5;
+    --muted: #F5F5F5;
+    --muted-foreground: #666666;
 
-    --accent: #00C853;              /* Electric Green */
-    --accent-foreground: #1A1F36;
+    --accent: #000000;
+    --accent-foreground: #FFFFFF;
 
-    --destructive: #E1443D;
+    --destructive: #D12429;
     --destructive-foreground: #FFFFFF;
 
-    --border: #2E354F;
-    --input: #2E354F;
-    --ring: #00C853;
+    --border: #EAEAEA;              /* Thin clean border line */
+    --input: #FFFFFF;
+    --ring: #000000;
 
     /* Visual Redesign Token Specs */
-    --bg-page: #1A1F36;             /* Midnight Blue */
-    --bg-card: #E0E2E7;             /* Light Silver */
-    --bg-sidebar: #131625;          /* Extra Dark Midnight Blue */
-    --bg-sidebar-hover: #1A1F36;
+    --bg-page: #FAFAFA;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #FFFFFF;
+    --bg-sidebar-hover: #FAFAFA;
 
-    --accent-lime: #00C853;         /* Electric Green */
-    --accent-lime-text: #1A1F36;
+    --accent-lime: #000000;
+    --accent-lime-text: #FFFFFF;
 
-    --text-primary: #E0E2E7;        /* Light Silver */
-    --text-secondary: #A0A5B5;      /* Secondary silver text */
+    --text-primary: #000000;
+    --text-secondary: #666666;
     --text-on-dark: #FFFFFF;
-    --text-on-dark-secondary: #A0A5B5;
+    --text-on-dark-secondary: #888888;
+
+    /* Status Colors (Solid, clean and professional) */
+    --status-paid-bg: #ECFDF5;    --status-paid-text: #047857;
+    --status-pending-bg: #FFFBEB; --status-pending-text: #B45309;
+    --status-overdue-bg: #FEF2F2; --status-overdue-text: #B91C1C;
+
+    /* Category soft tints */
+    --chip-purple-bg: #F5F3FF; --chip-purple-fg: #6D28D9;
+    --chip-green-bg:  #ECFDF5; --chip-green-fg:  #047857;
+    --chip-peach-bg:  #FFF7ED; --chip-peach-fg:  #C2410C;
+    --chip-blue-bg:   #EFF6FF; --chip-blue-fg:   #1D4ED8;
+
+    --shadow-card: none;            /* flat layout - no shadow */
+    --radius-lg: 8px;               /* crisp Geist standard corners */
+    --radius-md: 6px;
+    --radius-pill: 999px;
+  }
+
+  .dark {
+    /* Vercel Dark Theme */
+    --background: #000000;          /* True black dark theme background */
+    --foreground: #FFFFFF;          /* Pure white text */
+    
+    --card: #111111;                /* Dark gray cards */
+    --card-foreground: #FFFFFF;     
+    
+    --popover: #111111;
+    --popover-foreground: #FFFFFF;
+
+    --primary: #FFFFFF;             /* Crisp white primary */
+    --primary-foreground: #000000;
+
+    --secondary: #111111;           
+    --secondary-foreground: #FFFFFF;
+
+    --muted: #222222;
+    --muted-foreground: #888888;
+
+    --accent: #FFFFFF;
+    --accent-foreground: #000000;
+
+    --destructive: #F87171;
+    --destructive-foreground: #000000;
+
+    --border: #333333;              /* Deep dark border */
+    --input: #111111;
+    --ring: #FFFFFF;
+
+    /* Visual Redesign Token Specs */
+    --bg-page: #000000;
+    --bg-card: #111111;
+    --bg-sidebar: #000000;
+    --bg-sidebar-hover: #111111;
+
+    --accent-lime: #FFFFFF;
+    --accent-lime-text: #000000;
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #888888;
+    --text-on-dark: #FFFFFF;
+    --text-on-dark-secondary: #888888;
 
     /* Status Colors */
-    --status-paid-bg: #00C853;    --status-paid-text: #FFFFFF;
-    --status-pending-bg: #E28743; --status-pending-text: #FFFFFF;
-    --status-overdue-bg: #E1443D; --status-overdue-text: #FFFFFF;
+    --status-paid-bg: #064E3B;    --status-paid-text: #34D399;
+    --status-pending-bg: #78350F; --status-pending-text: #FBBF24;
+    --status-overdue-bg: #7F1D1D; --status-overdue-text: #F87171;
 
-    /* Category soft tints (flat, solid, dark backgrounds for contrast) */
-    --chip-purple-bg: #2C2440; --chip-purple-fg: #9D7EF5;
-    --chip-green-bg:  #163522; --chip-green-fg:  #34D399;
-    --chip-peach-bg:  #38241D; --chip-peach-fg:  #F59E0B;
-    --chip-blue-bg:   #1E2C3C; --chip-blue-fg:   #60A5FA;
-
-    --shadow-card: none;            /* flat design - no shadows */
-    --radius-lg: 12px;              /* modern flat rounded corners */
-    --radius-md: 8px;
-    --radius-pill: 999px;
+    /* Category soft tints */
+    --chip-purple-bg: #2E1065; --chip-purple-fg: #C084FC;
+    --chip-green-bg:  #064E3B; --chip-green-fg:  #34D399;
+    --chip-peach-bg:  #7C2D12; --chip-peach-fg:  #FB923C;
+    --chip-blue-bg:   #1E3A8A; --chip-blue-fg:   #60A5FA;
   }
 }

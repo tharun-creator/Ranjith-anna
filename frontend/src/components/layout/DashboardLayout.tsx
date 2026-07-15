@@ -49,20 +49,20 @@ export const DashboardLayout = ({
       {/* Fixed Sidebar (dark navy --bg-sidebar) */}
       <aside 
         style={{ backgroundColor: 'var(--bg-sidebar)' }}
-        className={`border-r border-white/5 text-white flex flex-col transition-all duration-200 hidden md:flex ${
+        className={`border-r border-[var(--border)] text-[var(--text-primary)] flex flex-col transition-all duration-200 hidden md:flex ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
-        <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
+        <div className="h-20 flex items-center justify-between px-6 border-b border-[var(--border)]">
           <div className="flex items-center">
             <div className="w-9 h-9 bg-[var(--accent-lime)] rounded-xl flex items-center justify-center mr-3 shadow-sm">
               <span className="text-[var(--accent-lime-text)] font-black text-lg">F</span>
             </div>
-            {!isCollapsed && <h1 className="font-extrabold text-base tracking-tight text-white select-none">Finnex</h1>}
+            {!isCollapsed && <h1 className="font-extrabold text-base tracking-tight text-[var(--text-primary)] select-none">Finnex</h1>}
           </div>
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 text-white/50 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--bg-sidebar-hover)] transition-colors cursor-pointer"
           >
             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
@@ -81,7 +81,7 @@ export const DashboardLayout = ({
                 } ${
                   isActive 
                     ? 'bg-[var(--accent-lime)] text-[var(--accent-lime-text)] font-bold shadow-md' 
-                    : 'text-[var(--text-on-dark-secondary)] hover:bg-white/5 hover:text-white'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--bg-sidebar-hover)] hover:text-[var(--text-primary)]'
                 }`}
                 title={item.label}
               >
@@ -98,7 +98,7 @@ export const DashboardLayout = ({
             } ${
               currentPage === 'settings' 
                 ? 'bg-[var(--accent-lime)] text-[var(--accent-lime-text)] font-bold shadow-md' 
-                : 'text-[var(--text-on-dark-secondary)] hover:bg-white/5 hover:text-white'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-sidebar-hover)] hover:text-[var(--text-primary)]'
             }`}
             title="Settings"
           >
@@ -109,12 +109,12 @@ export const DashboardLayout = ({
         
         {/* Bottom promo / CTA card in sidebar */}
         {!isCollapsed && (
-          <div className="p-4 mx-4 mb-4 bg-white/5 rounded-2xl border border-white/5 text-xs text-white">
+          <div className="p-4 mx-4 mb-4 bg-[var(--bg-page)] rounded-2xl border border-[var(--border)] text-xs text-[var(--text-primary)]">
             <div className="flex items-center gap-1.5 mb-1.5">
               <Sparkles className="w-3.5 h-3.5 text-[var(--accent-lime)]" />
               <span className="font-bold">Sync Invoices</span>
             </div>
-            <p className="text-[10px] text-[var(--text-on-dark-secondary)] leading-relaxed mb-3">
+            <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed mb-3">
               Connect Gmail to automate daily ledger tracking.
             </p>
             <button 
@@ -126,13 +126,13 @@ export const DashboardLayout = ({
           </div>
         )}
 
-        <div className="p-4 border-t border-white/5 space-y-2">
+        <div className="p-4 border-t border-[var(--border)] space-y-2">
           {!isCollapsed && (
-            <div className="flex items-center justify-between px-3 text-[10px] text-[var(--text-on-dark-secondary)] font-semibold mb-2">
+            <div className="flex items-center justify-between px-3 text-[10px] text-[var(--text-secondary)] font-semibold mb-2">
               <span>Show Jargon</span>
               <button 
                 onClick={() => setExpertMode(!expertMode)}
-                className="text-white/80 hover:text-white cursor-pointer"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 {expertMode ? <ToggleRight className="w-5 h-5 text-[var(--accent-lime)]" /> : <ToggleLeft className="w-5 h-5" />}
               </button>
@@ -144,7 +144,7 @@ export const DashboardLayout = ({
               clearToken()
               window.location.reload()
             }}
-            className={`flex items-center w-full py-2.5 text-[var(--text-on-dark-secondary)] hover:bg-white/5 hover:text-white rounded-full group font-semibold text-xs transition-all cursor-pointer ${
+            className={`flex items-center w-full py-2.5 text-[var(--text-secondary)] hover:bg-[var(--bg-sidebar-hover)] hover:text-[var(--text-primary)] rounded-full group font-semibold text-xs transition-all cursor-pointer ${
               isCollapsed ? 'justify-center px-0' : 'px-4'
             }`}
             title="Log out"

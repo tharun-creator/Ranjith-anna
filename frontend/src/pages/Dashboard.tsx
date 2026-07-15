@@ -186,7 +186,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
         {/* Card 1: Income (Sent) */}
         <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all">
           <div className="flex justify-between items-start">
-            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Total Billing (Sent)' : 'Income (Sent)'}
             </span>
             <span className="p-1.5 rounded-xl flex items-center justify-center bg-[var(--chip-green-bg)] text-[var(--chip-green-fg)]">
@@ -197,7 +197,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.totalSent)}
             </h3>
-            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
+            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
               Collected: <span className="text-emerald-700">{formatINR(metrics.totalCollected)}</span>
             </p>
           </div>
@@ -205,10 +205,10 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
 
         {/* Card 2: Outstanding Receivables */}
         <div className={`p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all border ${
-          metrics.outstandingReceivable > 0 ? 'border-amber-400 bg-amber-50' : 'bg-[var(--bg-card)] border-[var(--border)]'
+          metrics.outstandingReceivable > 0 ? 'border-amber-400 bg-amber-500/10' : 'bg-[var(--bg-card)] border-[var(--border)]'
         }`}>
           <div className="flex justify-between items-start">
-            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Accounts Receivable' : 'Money Owed To Me'}
             </span>
             <span className="p-1.5 rounded-xl flex items-center justify-center bg-[var(--chip-peach-bg)] text-[var(--chip-peach-fg)]">
@@ -219,7 +219,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.outstandingReceivable)}
             </h3>
-            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
+            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
               Outstanding client payments
             </p>
           </div>
@@ -228,7 +228,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
         {/* Card 3: Expense (Received) */}
         <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all">
           <div className="flex justify-between items-start">
-            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Total Expenses (Received)' : 'Expense (Received)'}
             </span>
             <span className="p-1.5 rounded-xl flex items-center justify-center bg-[var(--chip-blue-bg)] text-[var(--chip-blue-fg)]">
@@ -239,7 +239,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.totalReceived)}
             </h3>
-            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
+            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
               Paid: <span className="text-blue-700">{formatINR(metrics.totalPaidOut)}</span>
             </p>
           </div>
@@ -247,10 +247,10 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
 
         {/* Card 4: Outstanding Payables */}
         <div className={`p-5 rounded-[var(--radius-lg)] flex flex-col justify-between min-h-[140px] transition-all border ${
-          metrics.outstandingPayable > 0 ? 'border-red-300 bg-red-50' : 'bg-[var(--bg-card)] border-[var(--border)]'
+          metrics.outstandingPayable > 0 ? 'border-red-300 bg-red-500/10' : 'bg-[var(--bg-card)] border-[var(--border)]'
         }`}>
           <div className="flex justify-between items-start">
-            <span className="text-[#5C6479] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="text-[var(--text-secondary)] text-[10px] font-extrabold uppercase tracking-wider">
               {expertMode ? 'Accounts Payable' : 'Money I Owe'}
             </span>
             <span className="p-1.5 rounded-xl flex items-center justify-center bg-red-100 text-red-700">
@@ -261,7 +261,7 @@ export const Dashboard = ({ onViewAllInvoices }: { onViewAllInvoices?: () => voi
             <h3 className="text-xl font-black tracking-tight text-[var(--card-foreground)] font-mono leading-none">
               {formatINR(metrics.outstandingPayable)}
             </h3>
-            <p className="text-[9px] text-[#5C6479] font-bold mt-2">
+            <p className="text-[9px] text-[var(--text-secondary)] font-bold mt-2">
               Pending supplier invoices
             </p>
           </div>
